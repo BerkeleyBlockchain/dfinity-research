@@ -1,4 +1,9 @@
+# Canister things
 .dfx/
 canisters/
 target/
 build/
+
+# Frontend things
+node_modules
+dist

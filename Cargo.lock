@@ -34,6 +34,7 @@ dependencies = [
 name = "asset_storage_rs"
 version = "0.1.0"
 dependencies = [
+ "candid",
  "ic-cdk",
  "ic-cdk-macros",
  "ic-types",

@@ -3,13 +3,34 @@ use ic_cdk_macros::*;
 use ic_types::Principal;
 use std::collections::{BTreeMap, BTreeSet};
 
+#[import(canister = "linkedup")]
+struct LinkedUp;
+
+struct Video {
+    file: Vec<u8>,
+    title: String,
+    creator: Principal,
+    views: u64,
+    likes: u64
+}
+
 type Users = BTreeSet<Principal>;
 type Store = BTreeMap<String, Vec<u8>>;
+
+#[update]
+async fn get_profile() -> Box<Profile> {
+    LinkedUp::get(ic_cdk::api::caller()).await
+}
 
 #[init]
 fn init() {
     let users = storage::get_mut::<Users>();
     users.insert(ic_cdk::api::caller());
+}
+
+#[query]
+fn whoami() -> ic_types::Principal {
+   ic_cdk::api::caller() 
 }
 
 fn is_user() -> Result<(), String> {

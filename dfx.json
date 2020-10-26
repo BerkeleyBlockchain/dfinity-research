@@ -1,11 +1,54 @@
 {
   "version": 1,
   "canisters": {
+    "connectd": {
+      "main": "src/connectd/main.mo"
+    },
+    "linkedup": {
+      "dependencies": [
+        "connectd"
+      ],
+      "main": "src/linkedup/main.mo"
+    },
     "asset_storage": {
+      "dependencies": [
+        "linkedup"
+      ],
       "type": "custom",
       "candid": "src/asset_storage_rs/asset_storage.did",
       "wasm": "target/wasm32-unknown-unknown/debug/asset_storage_rs.wasm",
       "build": "cargo build --target wasm32-unknown-unknown --package asset_storage_rs"
+    },
+    "asset_storage_assets": {
+      "dependencies": [
+        "asset_storage"
+      ],
+      "frontend": {
+        "entrypoint": "src/asset_storage_assets/public/index.jsx"
+      },
+      "source": [
+        "src/asset_storage_assets/assets",
+        "dist/asset_storage_assets/"
+      ],
+      "type": "assets"
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": ""
+    }
+  },
+  "dfx": "0.6.12",
+  "networks": {
+    "ic": {
+      "providers": [
+        "https://gw.dfinity.network"
+      ],
+      "type": "persistent"
+    },
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
     }
   }
 }

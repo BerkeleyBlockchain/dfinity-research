@@ -1,6 +1,28 @@
+type Video = record {
+    "file": vec nat8;
+    "title": text;
+};
+
+type Profile_2 = record {
+    "id": principal;
+    "firstName": text;
+    "lastName": text;
+    "title": text;
+    "company": text;
+    "experience": text;
+    "education": text;
+    "imgUrl": text;
+};
+type Profile = Profile_2;
+
 service : {
-    "retrieve": (text) -> (vec nat8) query;
-    "store": (text, vec nat8) -> ();
+    "retrieve": (text) -> (Video) query;
+    "store": (text, Video)  -> ();
 
     "add_user": (principal) -> ();
+
+    "whoami": () -> (principal);
+
+    "create_user": (NewProfile) -> ();
 }
+
