@@ -23,6 +23,5 @@ service : {
 
     "whoami": () -> (principal);
 
-    "create_user": (NewProfile) -> ();
+    "get_profile": () -> (Profile);
 }
-

@@ -2,6 +2,7 @@ use ic_cdk::storage;
 use ic_cdk_macros::*;
 use ic_types::Principal;
 use std::collections::{BTreeMap, BTreeSet};
+use candid::parser::value::IDLValue;
 
 #[import(canister = "linkedup")]
 struct LinkedUp;
@@ -19,7 +20,15 @@ type Store = BTreeMap<String, Vec<u8>>;
 
 #[update]
 async fn get_profile() -> Box<Profile> {
-    LinkedUp::get(ic_cdk::api::caller()).await
+    let mut ser = candid::ser::IDLBuilder::new();
+    ser.value_arg(&IDLValue::Principal(ic_cdk::api::caller())).unwrap();
+    let bytes: Vec<u8> = ser.serialize_to_vec().unwrap();
+    ic_cdk::println!("{:?}", bytes);
+    Box::new(LinkedUp::get(bytes).await.0)
+
+    // let user = Encode!(&ic_cdk::api::caller()).unwrap();
+    // ic_cdk::println!("{:?}", user);
+    // Box::new(LinkedUp::get(user).await.0)
 }
 
 #[init]
@@ -30,7 +39,7 @@ fn init() {
 
 #[query]
 fn whoami() -> ic_types::Principal {
-   ic_cdk::api::caller() 
+   ic_cdk::api::caller()
 }
 
 fn is_user() -> Result<(), String> {
