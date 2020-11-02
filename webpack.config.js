@@ -53,10 +53,10 @@ function generateWebpackConfigForCanister(name, info) {
       path: path.join(__dirname, "dist", name),
     },
     module: {
-     rules: [
-       { test: /\.([jt]s)x?$/, loader: "ts-loader", exclude: /node_modules/ },
-       { test: /\.css$/, loader: "css-loader", exclude: /node_modules/ },
-     ]
+      rules: [
+        { test: /\.([jt]s)x?$/, loader: "ts-loader", exclude: /node_modules/ },
+        { test: /\.css$/, use: ['style-loader', 'css-loader'] },
+      ]
     },
     plugins: [
 
