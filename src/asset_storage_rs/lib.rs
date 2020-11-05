@@ -2,10 +2,10 @@ use ic_cdk::storage;
 use ic_cdk_macros::*;
 use ic_types::Principal;
 use std::collections::{BTreeMap, BTreeSet};
-use candid::parser::value::IDLValue;
-use candid::CandidType;
+use ic_cdk::export::candid;
+use ic_cdk::export::candid::CandidType;
 use uuid::Uuid;
-use serde::Serialize;
+use serde::{Deserialize,Serialize};
 
 #[import(canister = "linkedup")]
 struct LinkedUp;
@@ -19,6 +19,18 @@ struct Video {
     likes: u64
 }
 
+#[derive(Clone, Debug, CandidType, Deserialize)]
+struct Profile2 {
+    id: Principal,
+    firstName: String,
+    lastName: String,
+    title: String,
+    company: String,
+    experience: String,
+    education: String,
+    imgUrl: String,
+}
+
 #[derive(Clone, Default, Debug, CandidType, Serialize)]
 struct User {
     subscriptions: Vec<Principal>,
@@ -28,26 +40,11 @@ type Users = BTreeMap<Principal, User>;
 type Store = BTreeMap<String, Video>;
 
 #[update]
-async fn get_profile() -> Box<Profile> {
-    // let mut ser = candid::ser::IDLBuilder::new();
-    // ser.value_arg(&IDLValue::Principal(ic_cdk::api::caller())).unwrap();
-    // let bytes: Vec<u8> = ser.serialize_to_vec().unwrap();
-    // ic_cdk::println!("{:?}", bytes);
-    // Box::new(LinkedUp::get(bytes).await.0)
-
-    // let user = Encode!(&ic_cdk::api::caller()).unwrap();
-    // ic_cdk::println!("{:?}", user);
-    // Box::new(LinkedUp::get(user).await.0)
-    Box::new(Profile {
-        id: ic_cdk::api::caller().as_slice().to_vec(),
-        firstName: "dfinity".to_string(),
-        lastName: "DFINITY".to_string(),
-        title: "The".to_string(),
-        company: "DFINITY".to_string(),
-        experience: "I've done everything".to_string(),
-        education: "UC Berkeley".to_string(),
-        imgUrl: "".to_string(),
-    })
+async fn get_profile() -> Box<Profile2> {
+    let linkedupid = ic_cdk::export::Principal::from_text("do2cr-xieaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q").unwrap();
+    let args = (ic_cdk::api::caller(),);
+    let profile: (Profile2,) = ic_cdk::call(linkedupid, "get", args).await.unwrap();
+    Box::new(profile.0)
 }
 
 #[init]
@@ -75,7 +72,7 @@ fn is_user() -> Result<(), String> {
 fn store(title: String, contents: String) -> String {
     let store = storage::get_mut::<Store>();
     let id = Uuid::new_v3(&Uuid::NAMESPACE_URL, &contents.as_bytes())
-                .to_simple().to_string(); 
+                .to_simple().to_string();
     store.insert(id.clone(), Video {
         file: contents,
         title: title,
@@ -83,7 +80,7 @@ fn store(title: String, contents: String) -> String {
         likes: 0,
         views: 0,
     });
-    id 
+    id
 }
 
 #[update]
