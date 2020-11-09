@@ -10,6 +10,17 @@
       ],
       "main": "src/linkedup/main.mo"
     },
+    "linkedup_assets": {
+      "dependencies": ["linkedup"],
+      "frontend": {
+        "entrypoint": "src/linkedup/public/main.js"
+      },
+      "type": "assets",
+      "source": [
+        "src/linkedup/public",
+        "dist/linkedup_assets"
+      ]
+    },
     "asset_storage": {
       "dependencies": [
         "linkedup"
@@ -20,9 +31,6 @@
       "build": "cargo build --target wasm32-unknown-unknown --package asset_storage_rs"
     },
     "asset_storage_assets": {
-      "dependencies": [
-        "asset_storage"
-      ],
       "frontend": {
         "entrypoint": "src/asset_storage_assets/public/index.jsx"
       },
