@@ -13,7 +13,7 @@ use core::cmp::Ordering;
 #[import(canister = "linkedup")]
 struct LinkedUp;
 
-#[derive(Clone, Debug, CandidType, Serialize)]
+#[derive(Clone, Debug, CandidType, Serialize, Deserialize)]
 struct Video {
     file: String,
     title: String,
@@ -51,10 +51,10 @@ async fn get_profile() -> Box<Profile2> {
 }
 
 #[update]
-async fn get_connections() -> Vec<UserId> {
+async fn get_connections() -> Vec<Principal> {
     let linkedupid = ic_cdk::export::Principal::from_text("do2cr-xieaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q").unwrap();
     let args = (ic_cdk::api::caller(),);
-    let connections: (Vec<UserId>,) = ic_cdk::call(linkedupid, "getConnections", args).await.unwrap();
+    let connections: (Vec<Principal>,) = ic_cdk::call(linkedupid, "getConnections", args).await.unwrap();
     connections.0
 
 }
@@ -128,13 +128,12 @@ fn add_user(principal: Principal) {
     users.insert(principal, User::default());
 }
 
-#[query]
-fn connections_vids() -> Vec<&'static Video> {
-    let connections: (Vec<UserId>,) = get_connections();
+#[update]
+async fn connections_vids() -> Vec<&'static Video> {
+    let connections = get_connections().await;
     let store = storage::get::<Store>();
-    let videos = store.values;
-    videos.filter(|v| connections.contains(v.creator)).collect()
-
+    let videos = store.values();
+    videos.filter(|v| connections.contains(&v.creator)).collect()
 }
 
 #[query]
@@ -145,29 +144,33 @@ fn all() -> Vec<&'static Video> {
 
 // This could be a whole lot more efficient...
 // This is levenshtein distance, but with no penalties for insertion
-fn levenshtein_distance(a: &str, b: &str) {
+fn levenshtein_distance<T: std::cmp::PartialEq>(a: &[T], b: &[T]) -> usize {
     if a.len()  == 0 {
         b.len()
     } else if b.len() == 0 {
         a.len()
-    } else if (a[0] == b[0]) {
-        levenshtein_distance(a[1:], b[1]:)
+    } else if a[0] == b[0] {
+        levenshtein_distance(&a[1..], &b[1..])
     } else {
-        levenshtein_distance(a[1:], b)
-            .min(1 + levenshtein_distance(a, b[1:]))
-            .min(levenshtein_distance(a[1:], b[1:]))
+        levenshtein_distance(&a[1..], &b)
+            .min(1 + levenshtein_distance(&a, &b[1..]))
+            .min(levenshtein_distance(&a[1..], &b[1..]))
     }
 }
 
-fn text_has(v: &Video, text: &str) {
+fn levenstring_distance(a: &str, b: &str) -> usize {
+    levenshtein_distance(a.as_bytes(), b.as_bytes())
+}
+
+fn text_has(v: &Video, text: &str) -> bool {
     // heuristic that the distance between keyword and title is less than half the search length
-    levenshtein_distance(v.title, text) < text.len() / 2
+    levenstring_distance(&v.title, text) < text.len() / 2
 }
 
 fn text_match(a: &Video, b: &Video, text: &str) -> Ordering {
     // Sort by levenshtein distance and then by alphanumeric title
-    match levenshtein_distance(a.title, text).cmp(&levenshtein_distance(b.title, text)) {
-        Ordering::Equal => a.title.cmp(b.title),
+    match levenstring_distance(&a.title, text).cmp(&levenstring_distance(&b.title, text)) {
+        Ordering::Equal => a.title.cmp(&b.title),
         ord => ord,
     }
 }
@@ -176,21 +179,29 @@ fn text_match(a: &Video, b: &Video, text: &str) -> Ordering {
 fn search(query: String) -> Vec<&'static Video> {
     let store = storage::get::<Store>();
     let mut videos: Vec<&'static Video> =
-        store.values().filter(|v| text_has(v, text).collect();
+        store.values().filter(|v| text_has(v, &query)).collect();
     videos.sort_by(|a, b| text_match(a, b, &query));
     videos
 }
 
 #[pre_upgrade]
 fn pre_upgrade() {
-    let mut vec = storage::get_mut::<Store>.into_iter().collect();
+    let vec: Vec<(String, Video)> = storage::get::<Store>().iter()
+        .map(|(k,v)| (k.clone(), v.clone())).collect();
     storage::stable_save((vec,)).unwrap();
 }
 
 #[post_upgrade]
 fn post_upgrade() {
-    let (old_storage,): (Vec<(String, Video)>,) = storage::stable_restore().unwrap();
+    try_post_upgrade().unwrap_or_else(|e| {
+        ic_cdk::println!("Error upgrading: {:?}", e);
+    });
+}
+
+fn try_post_upgrade() -> Result<(), String> {
+    let (old_storage,): (Vec<(String, Video)>,) = storage::stable_restore()?;
     for (id, vid) in old_storage {
         storage::get_mut::<Store>().insert(id, vid);
     }
+    Ok(())
 }
