@@ -142,34 +142,14 @@ fn all() -> Vec<&'static Video> {
     store.values().collect()
 }
 
-// This could be a whole lot more efficient...
-// This is levenshtein distance, but with no penalties for insertion
-fn levenshtein_distance<T: std::cmp::PartialEq>(a: &[T], b: &[T]) -> usize {
-    if a.len()  == 0 {
-        b.len()
-    } else if b.len() == 0 {
-        a.len()
-    } else if a[0] == b[0] {
-        levenshtein_distance(&a[1..], &b[1..])
-    } else {
-        levenshtein_distance(&a[1..], &b)
-            .min(1 + levenshtein_distance(&a, &b[1..]))
-            .min(levenshtein_distance(&a[1..], &b[1..]))
-    }
-}
-
-fn levenstring_distance(a: &str, b: &str) -> usize {
-    levenshtein_distance(a.as_bytes(), b.as_bytes())
-}
-
 fn text_has(v: &Video, text: &str) -> bool {
     // heuristic that the distance between keyword and title is less than half the search length
-    levenstring_distance(&v.title, text) < text.len() / 2
+    v.title.to_ascii_lowercase().contains(text)
 }
 
 fn text_match(a: &Video, b: &Video, text: &str) -> Ordering {
     // Sort by levenshtein distance and then by alphanumeric title
-    match levenstring_distance(&a.title, text).cmp(&levenstring_distance(&b.title, text)) {
+    match a.title.len().cmp(&b.title.len()) {
         Ordering::Equal => a.title.cmp(&b.title),
         ord => ord,
     }
@@ -177,10 +157,11 @@ fn text_match(a: &Video, b: &Video, text: &str) -> Ordering {
 
 #[query]
 fn search(query: String) -> Vec<&'static Video> {
+    let lowerquery = query.to_ascii_lowercase();
     let store = storage::get::<Store>();
     let mut videos: Vec<&'static Video> =
-        store.values().filter(|v| text_has(v, &query)).collect();
-    videos.sort_by(|a, b| text_match(a, b, &query));
+        store.values().filter(|v| text_has(v, &lowerquery)).collect();
+    videos.sort_by(|a, b| text_match(a, b, &lowerquery));
     videos
 }
 
