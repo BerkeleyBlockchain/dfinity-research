@@ -129,9 +129,11 @@ fn add_user(principal: Principal) {
 }
 
 #[update]
+//gets videos which connections have posted for the feed
 async fn connections_vids() -> Vec<&'static Video> {
     let connections = get_connections().await;
     let store = storage::get::<Store>();
+    
     let videos = store.values();
     videos.filter(|v| connections.contains(&v.creator)).collect()
 }
