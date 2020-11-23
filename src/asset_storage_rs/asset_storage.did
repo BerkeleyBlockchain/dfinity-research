@@ -26,5 +26,9 @@ service : {
 
     "whoami": () -> (principal);
 
+    "all": () -> (vec Video);
+
     "get_profile": () -> (Profile);
+
+    "search": (text) -> (vec Video);
 }

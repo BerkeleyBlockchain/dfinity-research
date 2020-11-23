@@ -15,6 +15,7 @@ struct LinkedUp;
 
 #[derive(Clone, Debug, CandidType, Serialize, Deserialize)]
 struct Video {
+    video_id: String,
     file: String,
     title: String,
     creator: Principal,
@@ -92,6 +93,7 @@ fn store(title: String, contents: String) -> String {
     let id = Uuid::new_v3(&Uuid::NAMESPACE_URL, &contents.as_bytes())
                 .to_simple().to_string();
     store.insert(id.clone(), Video {
+        video_id: id.clone(),
         file: contents,
         title: title,
         creator: ic_cdk::api::caller(),

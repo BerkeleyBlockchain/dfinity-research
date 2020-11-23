@@ -31,6 +31,9 @@
       "build": "cargo build --target wasm32-unknown-unknown --package asset_storage_rs"
     },
     "asset_storage_assets": {
+      "dependencies": [
+	"asset_storage"
+      ],
       "frontend": {
         "entrypoint": "src/asset_storage_assets/public/index.jsx"
       },
