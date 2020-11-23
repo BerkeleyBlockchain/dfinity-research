@@ -78,6 +78,23 @@ class Upload extends React.Component {
     }
 }
 
+class Card extends React.Component {
+    render() {
+        return (
+            <div>
+                <div>
+                    {this.props.value}
+                </div>
+
+                <div>
+                    <img id="target" src={this.props.img} />
+                </div>
+            </div>
+
+        );
+    }
+}
+
 class Home extends React.Component {
     constructor(props) {
         super(props);
@@ -85,9 +102,19 @@ class Home extends React.Component {
             videoID: '',
             message: '',
             videoName: '',
+            search: '',
             // videoInfo: '',
             video: [],
+            searchResults: null,
+            searching: false,
+            all: [],
         };
+    }
+
+    async componentDidMount() {
+        const videos = await asset_storage.all();
+        console.log(videos)
+        this.setState({ ...this.state, all: videos });
     }
 
     async getVideo() {
@@ -96,11 +123,27 @@ class Home extends React.Component {
         this.setState({ ...this.state, message: video['file'] });
     }
 
+    async searchVideo() {
+        this.setState({ ...this.state, searching: true });
+        const videos = await asset_storage.search(this.state.search);
+        console.log('searching', videos)
+        this.setState({ ...this.state, searchResults: videos, searching: false })
+    }
+
     onNameChange(ev) {
         this.setState({ ...this.state, videoID: ev.target.value });
     }
 
+    onSearchChange(ev) {
+        this.setState({ ...this.state, search: ev.target.value });
+    }
+
     render() {
+        var elements = [];
+        for (var i = 0; i < this.state.all.length; i++) {
+            // push the component to elements!
+            elements.push(<Card value={this.state.all[i]["title"]} img={this.state.all[i]["file"]} />);
+        }
         return (
             <div className="app">
                 <div>
@@ -108,15 +151,32 @@ class Home extends React.Component {
                     <p> Search your image id to find it!</p>
                 </div>
                 <div>
+                    <input placeholder="Search..." id="videosearch" value={this.state.search} onChange={ev => this.onSearchChange(ev)}></input>
+                    <button onClick={() => this.searchVideo()}>Search Video!</button>
+                </div>
+                { this.state.searching ? <div>Searching...</div> : (
+                    this.state.searchResults == null ? "" : (
+                        (this.state.searchResults.length ? <div>
+                            <h2>Search results</h2>
+                            {this.state.searchResults.map(v => <pre>{JSON.stringify(v)}</pre>)}
+                        </div> : <div>No results matched your query.</div>)))
+                }
+
+                <div>
                     <input placeholder="Type id of image" id="videoID" value={this.state.videoID} onChange={ev => this.onNameChange(ev)}></input>
                     <button onClick={() => this.getVideo()}>Get Video!</button>
                 </div>
+
                 <div><img id="target" src={this.state.message} /></div>
+
+                <div>
+                    {elements}
+                </div>
             </div>
         );
     }
 }
-       
+
 class MyHello extends React.Component {
     constructor(props) {
         super(props);
@@ -222,12 +282,12 @@ class Test extends React.Component {
 
 function Navbar() {
     return (
-      <div>
-        <Link to="/">Babtube </Link>
-        <Link to="/upload">Upload Image </Link>
-      </div>
+        <div>
+            <Link to="/">Babtube </Link>
+            <Link to="/upload">Upload Image </Link>
+        </div>
     );
-  };
+};
 
 function App() {
     return (
@@ -244,7 +304,7 @@ function App() {
 render(
     <BrowserRouter>
         <App />
-    </BrowserRouter>, 
+    </BrowserRouter>,
     document.getElementById('app')
 )
 
