@@ -89,18 +89,23 @@ fn is_user() -> Result<(), String> {
 
 #[update] // (guard = "is_user")]
 fn store(title: String, contents: String) -> String {
-    let store = storage::get_mut::<Store>();
-    let id = Uuid::new_v3(&Uuid::NAMESPACE_URL, &contents.as_bytes())
-                .to_simple().to_string();
-    store.insert(id.clone(), Video {
-        video_id: id.clone(),
-        file: contents,
-        title: title,
-        creator: ic_cdk::api::caller(),
-        likes: 0,
-        views: 0,
-    });
-    id
+    // contents is in format "data:image/jpeg;base64,/9j/2wBDAAICAgICAgMCAgMFAwMDBQ..." 
+    if (contents[5..10].eq("image") || contents[5..10].eq("video")) {
+        let store = storage::get_mut::<Store>();
+        let id = Uuid::new_v3(&Uuid::NAMESPACE_URL, &contents.as_bytes())
+                    .to_simple().to_string();
+        store.insert(id.clone(), Video {
+            video_id: id.clone(),
+            file: contents,
+            title: title,
+            creator: ic_cdk::api::caller(),
+            likes: 0,
+            views: 0,
+        });
+        id
+    } else {
+        panic!("Wrong File Type!")
+    }
 }
 
 #[update]

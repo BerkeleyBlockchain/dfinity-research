@@ -25,6 +25,7 @@ class Upload extends React.Component {
         // console.log(this.state.video)
         const ret = await asset_storage.store(this.state.videoName, this.state.video);
         console.log(ret)
+        this.props.history.push('/image/' + ret);
     }
 
     onVideoNameChange(ev) {
@@ -36,7 +37,7 @@ class Upload extends React.Component {
         // this.setState({ ...this.state, video: ev.target.files[0] });
         console.log(this.state.video)
         if (event.target.files && event.target.files[0]) {
-            this.setState({ fileName: ev.target.files[0].name });
+            this.setState({ fileName: event.target.files[0].name });
             let reader = new FileReader();
             reader.onload = (e) => {
                 // console.log(e.target.result);
@@ -48,13 +49,13 @@ class Upload extends React.Component {
 
     render() {
         return (
-            <div className="app">
+            <section className="section">
                 <div>
                     <h1>Please upload your image below</h1>
                 </div>
                 <div className="uploadArea">
                     <div>
-                        
+
                         {/* <input id="videoName" value={this.state.videoName} onChange={ev => this.onVideoNameChange(ev)}></input> */}
                         {/* <input id="videoInfo" value={this.state.videoInfo} onChange={ev => this.onVideoInfoChange(ev)}></input> */}
 
@@ -73,13 +74,13 @@ class Upload extends React.Component {
                             <div class="field">
                                 <div class="control">
                                     <label class="label">Video Info</label>
-                                    <input class="input" type="text" placeholder="Video Title" id="videoInfo" onChange={ev => this.onVideoNameChange(ev)}/>
+                                    <input class="input" type="text" placeholder="Video Title" id="videoInfo" onChange={ev => this.onVideoNameChange(ev)} />
                                 </div>
                             </div>
                             <label class="label">Upload Your File </label>
                             <div id="file-js-example" class="file has-name">
                                 <label class="file-label">
-                                    <input class="file-input" type="file" name="resume" onChange={ev => this.onChangeHandler(ev)}/>
+                                    <input class="file-input" type="file" name="resume" onChange={ev => this.onChangeHandler(ev)} />
                                     <span class="file-cta">
                                         <span class="file-icon">
                                             <i class="fas fa-upload"></i>
@@ -89,12 +90,12 @@ class Upload extends React.Component {
                                         </span>
                                     </span>
                                     <span class="file-name">
-                                        {this.state.fileName === "" ?  " No File Uploaded" : this.state.fileName}
+                                        {this.state.fileName === "" ? " No File Uploaded" : this.state.fileName}
                                     </span>
                                 </label>
                             </div>
                         </div>
-                        
+
                         <div>
                             <Link to="/">
                                 <button class="button" onClick={() => this.storeVideo()}>Upload video!</button>
@@ -102,7 +103,7 @@ class Upload extends React.Component {
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
         );
     }
 }
@@ -110,14 +111,14 @@ class Upload extends React.Component {
 class Card extends React.Component {
     render() {
         return (
-            
+
             <div>
                 <div>
                     {this.props.value}
                 </div>
 
                 <Link to={`/image/${this.props.id}`}>
-                    <img src={this.props.img}/>
+                    <img src={this.props.img} />
                 </Link>
 
             </div>
@@ -136,8 +137,6 @@ class Home extends React.Component {
             search: '',
             // videoInfo: '',
             video: [],
-            searchResults: null,
-            searching: false,
             all: [],
         };
     }
@@ -154,19 +153,8 @@ class Home extends React.Component {
         this.setState({ ...this.state, message: video['file'] });
     }
 
-    async searchVideo() {
-        this.setState({ ...this.state, searching: true });
-        const videos = await asset_storage.search(this.state.search);
-        console.log('searching', videos)
-        this.setState({ ...this.state, searchResults: videos, searching: false })
-    }
-
     onNameChange(ev) {
         this.setState({ ...this.state, videoID: ev.target.value });
-    }
-
-    onSearchChange(ev) {
-        this.setState({ ...this.state, search: ev.target.value });
     }
 
     render() {
@@ -201,7 +189,7 @@ class Search extends React.Component {
 
     async componentDidMount() {
         this.setState({ ...this.state, searching: true });
-        const videos = await asset_storage.search(this.props.params.name);
+        const videos = await asset_storage.search(this.props.match.params.name);
         console.log('searching', videos)
         this.setState({ ...this.state, searchResults: videos, searching: false })
     }
@@ -238,12 +226,14 @@ class Video extends React.Component {
 
     async componentDidMount() {
         const video = await asset_storage.retrieve(this.props.match.params.id);
-        console.log('getting video')
-        this.setState({ ...this.state, views: video['views'], likes: video['likes'], videoName: video['title'], video: video['file'] });
-    }
-
-    onNameChange(ev) {
-        this.setState({ ...this.state, videoID: ev.target.value });
+        this.setState({
+            ...this.state,
+            views: Number(video.views),
+            likes: Number(video.likes),
+            videoName: video.title,
+            video: video.file
+        });
+        console.log(this.state);
     }
 
     render() {
@@ -261,14 +251,14 @@ class Video extends React.Component {
         );
     }
 }
-       
+
 
 function Navbar() {
     const [term, updateTerm] = useState('');
     const history = useHistory();
     const search = (evt) => {
         evt.preventDefault();
-        history.push('/search/'  + term);
+        history.push('/search/' + term);
     }
     return (
         <nav class="navbar is-warning" role="navigation" aria-label="main navigation">
@@ -287,11 +277,11 @@ function Navbar() {
                 <div class="field has-addons is-align-self-center mr-2">
                     <div class="control">
                         <input class="input" type="text" value={term} placeholder="Search by title"
-                            onChange={e => updateTerm(e.target.value)} /> 
+                            onChange={e => updateTerm(e.target.value)} />
                     </div>
                     <div class="control">
-                            <button type="submit" class="button is-light">
-                                Search
+                        <button type="submit" class="button is-light">
+                            Search
                             </button>
                     </div>
                 </div>
