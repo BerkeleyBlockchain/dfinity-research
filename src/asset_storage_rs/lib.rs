@@ -55,9 +55,8 @@ async fn get_profile() -> Box<Profile2> {
 async fn get_connections() -> Vec<Principal> {
     let linkedupid = ic_cdk::export::Principal::from_text("do2cr-xieaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q").unwrap();
     let args = (ic_cdk::api::caller(),);
-    let connections: (Vec<Principal>,) = ic_cdk::call(linkedupid, "getConnections", args).await.unwrap();
-    connections.0
-
+    let connections: (Vec<Profile2>,) = ic_cdk::call(linkedupid, "getConnections", args).await.unwrap();
+    connections.0.iter().map(|c| c.id.clone()).collect()
 }
 
 // async fn is_connection() -> bool {
@@ -89,7 +88,7 @@ fn is_user() -> Result<(), String> {
 
 #[update] // (guard = "is_user")]
 fn store(title: String, contents: String) -> String {
-    // contents is in format "data:image/jpeg;base64,/9j/2wBDAAICAgICAgMCAgMFAwMDBQ..." 
+    // contents is in format "data:image/jpeg;base64,/9j/2wBDAAICAgICAgMCAgMFAwMDBQ..."
     if (contents[5..10].eq("image") || contents[5..10].eq("video")) {
         let store = storage::get_mut::<Store>();
         let id = Uuid::new_v3(&Uuid::NAMESPACE_URL, &contents.as_bytes())
@@ -140,7 +139,7 @@ fn add_user(principal: Principal) {
 async fn connections_vids() -> Vec<&'static Video> {
     let connections = get_connections().await;
     let store = storage::get::<Store>();
-    
+
     let videos = store.values();
     videos.filter(|v| connections.contains(&v.creator)).collect()
 }

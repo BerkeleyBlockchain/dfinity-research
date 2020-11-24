@@ -4,6 +4,7 @@ type Video = record {
     "creator": principal;
     "likes": nat64;
     "views": nat64;
+    "video_id": text;
 };
 
 type Profile_2 = record {
@@ -27,8 +28,10 @@ service : {
     "whoami": () -> (principal);
 
     "all": () -> (vec Video);
+    "connections_vids": () -> (vec Video);
 
     "get_profile": () -> (Profile);
+    "get_connections": () -> (vec principal);
 
     "search": (text) -> (vec Video);
 }

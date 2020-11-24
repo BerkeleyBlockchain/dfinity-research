@@ -1,10 +1,8 @@
 import asset_storage from 'ic:canisters/asset_storage';
 import React, { useState } from 'react';
 import { render } from 'react-dom';
-// import React, { Comonent } from 'react';
 import ReactDOM from 'react-dom';
 import { Link, HashRouter, Route, Switch, useHistory } from 'react-router-dom';
-// import "./style.css"
 import "./style.scss";
 
 class Upload extends React.Component {
@@ -48,6 +46,7 @@ class Upload extends React.Component {
     }
 
     render() {
+        window.asset_storage = asset_storage;
         return (
             <section className="section">
                 <div>
@@ -55,21 +54,6 @@ class Upload extends React.Component {
                 </div>
                 <div className="uploadArea">
                     <div>
-
-                        {/* <input id="videoName" value={this.state.videoName} onChange={ev => this.onVideoNameChange(ev)}></input> */}
-                        {/* <input id="videoInfo" value={this.state.videoInfo} onChange={ev => this.onVideoInfoChange(ev)}></input> */}
-
-
-                        {/* <div class="col-md-6">
-                            <form method="post" action="#" id="#">
-                                <div class="form-group files">
-                                    <label>Upload Your File </label>
-                                    <input type="file" class="form-control" multiple="" onChange={ev => this.onChangeHandler(ev)} />
-                                </div>
-                            </form>
-                        </div> */}
-
-
                         <div class="col-md-6">
                             <div class="field">
                                 <div class="control">
@@ -111,18 +95,20 @@ class Upload extends React.Component {
 class Card extends React.Component {
     render() {
         return (
-
-            <div>
-                <div>
-                    {this.props.value}
+            <Link to={`/image/${this.props.video.video_id}`}>
+                <div class="card">
+                    <div class="card-image">
+                        <figure class="image is-4by3">
+                            <img src={this.props.video.file} />
+                        </figure>
+                    </div>
+                    <div class="card-content">
+                        <div class="content">
+                            {this.props.video.title}
+                        </div>
+                    </div>
                 </div>
-
-                <Link to={`/image/${this.props.id}`}>
-                    <img src={this.props.img} />
-                </Link>
-
-            </div>
-
+            </Link>
         );
     }
 }
@@ -131,26 +117,15 @@ class Home extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            videoID: '',
             message: '',
-            videoName: '',
-            search: '',
-            // videoInfo: '',
-            video: [],
             all: [],
+            connections: [],
         };
     }
 
-    async componentDidMount() {
-        const videos = await asset_storage.all();
-        console.log(videos)
-        this.setState({ ...this.state, all: videos });
-    }
-
-    async getVideo() {
-        const video = await asset_storage.retrieve(this.state.videoID);
-        console.log('getting video')
-        this.setState({ ...this.state, message: video['file'] });
+    componentDidMount() {
+        asset_storage.all().then(videos => this.setState({ ...this.state, all: videos }));
+        asset_storage.connections_vids().then(videos => this.setState({ ...this.state, connections: videos }));
     }
 
     onNameChange(ev) {
@@ -158,21 +133,25 @@ class Home extends React.Component {
     }
 
     render() {
-        var elements = [];
-        for (var i = 0; i < this.state.all.length; i++) {
-            // push the component to elements!
-            elements.push(<Card id={this.state.all[i]["video_id"]} value={this.state.all[i]["title"]} img={this.state.all[i]["file"]} />);
-        }
+        const all = this.state.all.map(video => (
+            <div className="column is-2"><Card video={video}/></div>
+        ));
+        const connections = this.state.connections.map(video => (
+            <div className="column is-2"><Card video={video}/></div>
+        ));
         return (
             <div className="app">
                 <section class="section">
-                    <div>
-                        <h1 class="title">Greetings, from BABMEO! Loading videos</h1>
+                    <h1 class="title">Greetings, from BABMEO! Loading videos</h1>
+                    <h2 className="subtitle">All videos</h2>
+                    <div className="columns">
+                        {all}
+                    </div>
+                    <h2 className="subtitle">Videos from your LinkedUp connections</h2>
+                    <div className="columns">
+                        {connections}
                     </div>
                 </section>
-                <div>
-                    {elements}
-                </div>
             </div>
         );
     }
@@ -197,15 +176,14 @@ class Search extends React.Component {
     render() {
         return (
             <section className="section">
-                <div>
-                    <h1>Search results</h1>
-                </div>
-                { this.state.searching ? <div>Searching...</div> : (
-                    this.state.searchResults == null ? "" : (
-                        (this.state.searchResults.length ? <div>
-                            <h2>Search results</h2>
-                            {this.state.searchResults.map(v => <pre>{JSON.stringify(v)}</pre>)}
-                        </div> : <div>No results matched your query.</div>)))
+                <h1 class="title">Search results</h1>
+                { this.state.searching ? (
+                    <progress class="progress is-small is-primary" max="100">Loading...</progress>
+                ) : (
+                        this.state.searchResults == null ? "" : (
+                            (this.state.searchResults.length ? <div>
+                                {this.state.searchResults.map(v => <pre>{JSON.stringify(v)}</pre>)}
+                            </div> : <div>No results matched your query.</div>)))
                 }
             </section>
         );
@@ -311,100 +289,3 @@ render(
     </HashRouter>,
     document.getElementById('app')
 )
-
-
-// render(<MyHello />, document.getElementById('app'));
-
-// class MyHello extends React.Component {
-//     constructor(props) {
-//         super(props);
-//         this.state = {
-//             videoID: 'Video ID',
-//             message: '',
-//             videoName: '',
-//             // videoInfo: '',
-//             video: [],
-//         };
-//     }
-
-//     async whoami() {
-//         const greeting = await asset_storage.whoami();
-//         alert(greeting);
-//     }
-
-//     // Should call asset_storage.store, provide video title and file (string)
-//     async storeVideo() {
-//         console.log(this.state.videoName)
-//         // console.log(this.state.video)
-//         const ret = await asset_storage.store(this.state.videoName, this.state.video);
-//         console.log(ret)
-//     }
-
-//     async getVideo() {
-//         const video = await asset_storage.retrieve(this.state.videoID);
-//         // console.log(video)
-//         // console.log(video['file'])
-//         console.log('getting video')
-//         this.setState({ ...this.state, message: video['file'] });
-//         // this.setState({ ...this.state, message: video });
-//     }
-
-//     onNameChange(ev) {
-//         this.setState({ ...this.state, videoID: ev.target.value });
-//     }
-
-//     onVideoNameChange(ev) {
-//         this.setState({ ...this.state, videoName: ev.target.value });
-//     }
-
-//     onChangeHandler(event) {
-//         // console.log(ev.target.files[0])
-//         // this.setState({ ...this.state, video: ev.target.files[0] });
-//         // console.log(this.state.video)
-//         if (event.target.files && event.target.files[0]) {
-//             let reader = new FileReader();
-//             reader.onload = (e) => {
-//                 // console.log(e.target.result);
-//                 this.setState({ video: e.target.result });
-//             };
-//             reader.readAsDataURL(event.target.files[0]);
-//         }
-//     }
-
-
-
-//     render() {
-//         return (
-//             <div className="app">
-//                 <div>
-//                     <h1>Greetings, from BABTUBE!</h1>
-//                     <p> Type your video id in the Video input field, then click <b> Get Video</b> to display the desired video.</p>
-//                 </div>
-//                 <div className="uploadArea">
-//                     <div>
-
-//                         <input id="videoName" value={this.state.videoName} onChange={ev => this.onVideoNameChange(ev)}></input>
-//                         {/* <input id="videoInfo" value={this.state.videoInfo} onChange={ev => this.onVideoInfoChange(ev)}></input> */}
-
-
-//                         <div class="col-md-6">
-//                             <form method="post" action="#" id="#">
-//                                 <div class="form-group files">
-//                                     <label>Upload Your File </label>
-//                                     <input type="file" class="form-control" multiple="" onChange={ev => this.onChangeHandler(ev)} />
-//                                 </div>
-//                             </form>
-//                         </div>
-
-
-//                         <button onClick={() => this.storeVideo()}>Upload video!</button>
-//                     </div>
-//                     <input id="videoID" value={this.state.videoID} onChange={ev => this.onNameChange(ev)}></input>
-//                     <button onClick={() => this.getVideo()}>Get Video!</button>
-//                     <button onClick={() => this.whoami()}>Who am I?</button>
-//                 </div>
-//                 <div>Video is: "<img id="target" src={this.state.message} />"</div>
-//             </div>
-//         );
-//     }
-// }
