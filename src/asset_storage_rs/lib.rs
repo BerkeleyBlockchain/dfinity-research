@@ -10,19 +10,14 @@ use uuid::Uuid;
 use serde::{Deserialize,Serialize};
 use core::cmp::Ordering;
 
+// Import the LinkedUp canister. We need this to make inter-canister calls to it!
 #[import(canister = "linkedup")]
 struct LinkedUp;
 
-#[derive(Clone, Debug, CandidType, Serialize, Deserialize)]
-struct Video {
-    video_id: String,
-    file: String,
-    title: String,
-    creator: Principal,
-    views: u64,
-    likes: u64
-}
-
+// Define our own Profile struct. There is a Profile struct automatically imported
+// since the linkedup cansiter was imported, but due to a bug with our current version
+// of dfx, the imported Profile has the wrong type for `id` (it's not a Principal
+// type). So for now, we use this slightly modified version called Profile2.
 #[derive(Clone, Debug, CandidType, Deserialize)]
 struct Profile2 {
     id: Principal,
@@ -35,6 +30,17 @@ struct Profile2 {
     imgUrl: String,
 }
 
+// Datatype for storing videos.
+#[derive(Clone, Debug, CandidType, Serialize, Deserialize)]
+struct Video {
+    video_id: String,
+    file: String,
+    title: String,
+    creator: Principal,
+    views: u64,
+    likes: u64
+}
+
 #[derive(Clone, Default, Debug, CandidType, Serialize)]
 struct User {
     subscriptions: Vec<Principal>,
@@ -43,14 +49,19 @@ struct User {
 type Users = BTreeMap<Principal, User>;
 type Store = BTreeMap<String, Video>;
 
+// Returns the user's profile from LinkedUp.
 #[update]
 async fn get_profile() -> Box<Profile2> {
+    // This is the canister id of the canister running LinkedUp
     let linkedupid = ic_cdk::export::Principal::from_text("do2cr-xieaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q").unwrap();
+    // There is only one for LinkedUp's `get` function: the id of the user.
     let args = (ic_cdk::api::caller(),);
+    // Call the `get` function from LinkedUp, expecting the return type to be a Profile (but wrapped in a tuple).
     let profile: (Profile2,) = ic_cdk::call(linkedupid, "get", args).await.unwrap();
     Box::new(profile.0)
 }
 
+// Calls the LinkedUp getConnections method, which returns an array of connected profiles for the given user id.
 #[update]
 async fn get_connections() -> Vec<Principal> {
     let linkedupid = ic_cdk::export::Principal::from_text("do2cr-xieaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q").unwrap();
@@ -71,6 +82,7 @@ fn init() {
     users.insert(ic_cdk::api::caller(), User::default());
 }
 
+// Returns the principal id for the current user.
 #[query]
 fn whoami() -> ic_types::Principal {
    ic_cdk::api::caller()
@@ -86,6 +98,7 @@ fn is_user() -> Result<(), String> {
     }
 }
 
+// Adds a video to our database.
 #[update] // (guard = "is_user")]
 fn store(title: String, contents: String) -> String {
     // contents is in format "data:image/jpeg;base64,/9j/2wBDAAICAgICAgMCAgMFAwMDBQ..."
@@ -107,6 +120,7 @@ fn store(title: String, contents: String) -> String {
     }
 }
 
+// Subscribes to another user. This influences the recommended videos for the current user.
 #[update]
 fn subscribe(sub: ic_types::Principal) {
     let users = storage::get_mut::<Users>();
@@ -118,6 +132,7 @@ fn subscribe(sub: ic_types::Principal) {
     }
 }
 
+// Retrieve a video and its metadata.
 #[query]
 fn retrieve(path: String) -> &'static Video {
     let store = storage::get::<Store>();
