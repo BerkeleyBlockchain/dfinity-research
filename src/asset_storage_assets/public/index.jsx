@@ -4,6 +4,17 @@ import { render } from 'react-dom';
 import ReactDOM from 'react-dom';
 import { Link, HashRouter, Route, Switch, useHistory } from 'react-router-dom';
 import "./style.scss";
+import { copyWithin } from 'webpack.config.dev';
+
+
+const OPTIONS = ["All Videos", "Friend's Videos"]
+const CheckBox = props => {
+    return (
+        <li>
+            <input key={props.id} onChange={props.handleCheckChieldElement} type="checkbox" checked={props.isChecked} value={props.value} /> {props.value}
+        </li>
+    )
+}
 
 class Upload extends React.Component {
     constructor(props) {
@@ -14,11 +25,28 @@ class Upload extends React.Component {
             videoName: '',
             video: [],
             fileName: '',
+            tags: [
+                { id: 1, value: "funny", isChecked: false },
+                { id: 2, value: "gaming", isChecked: false },
+                { id: 3, value: "dark", isChecked: false },
+                { id: 4, value: "animals", isChecked: false }
+            ]
+
         };
     }
 
     // Should call asset_storage.store, provide video title and file (string)
     async storeVideo() {
+        let ls = []
+        console.log("should be empty", ls)
+        let tags = this.state.tags
+        var i;
+        for (i = 0; i < tags.length; i++) {
+            if (tags[i][isChecked]) {
+                ls.push(tags[i]['value'])
+            }
+        }
+        console.log("tags", ls)
         console.log(this.state.videoName)
         // console.log(this.state.video)
         const ret = await asset_storage.store(this.state.videoName, this.state.video);
@@ -28,6 +56,15 @@ class Upload extends React.Component {
 
     onVideoNameChange(ev) {
         this.setState({ ...this.state, videoName: ev.target.value });
+    }
+
+    handleCheckChieldElement = (event) => {
+        let tags = this.state.tags
+        tags.forEach(t => {
+            if (t.value === event.target.value)
+                t.isChecked = event.target.checked
+        })
+        this.setState({ tags: tags })
     }
 
     onChangeHandler(event) {
@@ -80,6 +117,14 @@ class Upload extends React.Component {
                             </div>
                         </div>
 
+                        <ul>
+                            {
+                                this.state.tags.map((t, index) => {
+                                    return (<CheckBox key={index} handleCheckChieldElement={this.handleCheckChieldElement}  {...t} />)
+                                })
+                            }
+                        </ul>
+
                         <div>
                             <Link to="/">
                                 <button class="button" onClick={() => this.storeVideo()}>Upload video!</button>
@@ -102,13 +147,14 @@ class Card extends React.Component {
                             <img src={this.props.video.file} />
                         </figure>
                     </div>
-                    <div class="card-content">
-                        <div class="content">
-                            {this.props.video.title}
-                        </div>
+                    <div class="content">
+                        <p class="title is-4">{this.props.video.title}</p>
+                        {(this.props.from !== NULL)
+                            ? <p class="subtitle is-8">Recommended from {this.props.from} Videos</p>
+                            : <p class="subtitle is-8">Recommended from public</p>}
                     </div>
                 </div>
-            </Link>
+            </Link >
         );
     }
 }
@@ -120,7 +166,19 @@ class Home extends React.Component {
             message: '',
             all: [],
             connections: [],
+            tags: [
+                { id: 1, value: "All Videos", isChecked: true },
+                { id: 2, value: "Friend's Videos", isChecked: true }
+            ]
         };
+    }
+    handleCheckChieldElement = (event) => {
+        let tags = this.state.tags
+        tags.forEach(t => {
+            if (t.value === event.target.value)
+                t.isChecked = event.target.checked
+        })
+        this.setState({ tags: tags })
     }
 
     componentDidMount() {
@@ -134,15 +192,19 @@ class Home extends React.Component {
 
     render() {
         const all = this.state.all.map(video => (
-            <div className="column is-2"><Card video={video}/></div>
+            <div className="column is-2"><Card video={video} from={"Random"} /></div>
         ));
         const connections = this.state.connections.map(video => (
-            <div className="column is-2"><Card video={video}/></div>
+            <div className="column is-2"><Card video={video} from={"Connections"} /></div>
         ));
         return (
             <div className="app">
                 <section class="section">
-                    <h1 class="title">Greetings, from BABMEO! Loading videos</h1>
+                    <h1 class="title">Greetings, from BABMEO :O !! Loading videos</h1>
+                    {/* this.state.tags.map((t, index) => { */}
+                    {/* return (<CheckBox key={index} handleCheckChieldElement={this.handleCheckChieldElement}  {...t} />) */}
+                    {/* }) */}
+
                     <h2 className="subtitle">All videos</h2>
                     <div className="columns">
                         {all}
@@ -173,16 +235,21 @@ class Search extends React.Component {
         this.setState({ ...this.state, searchResults: videos, searching: false })
     }
 
+    async componentDidUpdate(prevProps) {
+        if (prevProps.match.params.name !== this.props.match.params.name)
+            await this.componentDidMount()
+    }
+
     render() {
         return (
             <section className="section">
                 <h1 class="title">Search results</h1>
-                { this.state.searching ? (
+                {this.state.searching ? (
                     <progress class="progress is-small is-primary" max="100">Loading...</progress>
                 ) : (
                         this.state.searchResults == null ? "" : (
                             (this.state.searchResults.length ? <div>
-                                {this.state.searchResults.map(v => <pre>{JSON.stringify(v)}</pre>)}
+                                {this.state.searchResults.map(video => (<div className="column is-2"><Card video={video} /></div>))}
                             </div> : <div>No results matched your query.</div>)))
                 }
             </section>
@@ -229,7 +296,6 @@ class Video extends React.Component {
         );
     }
 }
-
 
 function Navbar() {
     const [term, updateTerm] = useState('');
