@@ -6,7 +6,6 @@ import { Link, HashRouter, Route, Switch, useHistory } from 'react-router-dom';
 import "./style.scss";
 import { copyWithin } from 'webpack.config.dev';
 
-
 const OPTIONS = ["All Videos", "Friend's Videos"]
 const CheckBox = props => {
     return (
@@ -192,10 +191,10 @@ class Home extends React.Component {
 
     render() {
         const all = this.state.all.map(video => (
-            <div className="column is-2"><Card video={video} from={"Random"} /></div>
+            <div key={video.title} className="column is-2"><Card video={video} from={"Random"} /></div>
         ));
         const connections = this.state.connections.map(video => (
-            <div className="column is-2"><Card video={video} from={"Connections"} /></div>
+            <div key={video.title} className="column is-2"><Card video={video} from={"Connections"} /></div>
         ));
         return (
             <div className="app">
@@ -345,6 +344,11 @@ function App() {
                 <Route path="/image/:id" component={Video} />
                 <Route path="/search/:name" component={Search} />
             </Switch>
+            <section>
+                <center>
+                    Visit <a href="/proxy/?canisterId=6ttj4-pafaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q">LinkedUp</a>.
+                </center>
+            </section>
         </main>
     )
 }

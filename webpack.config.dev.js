@@ -12,7 +12,6 @@ function generateWebpackDevConfig(config) {
   if (config.entry.index.includes('linkedup')) { // don't run linkedup in dev mode
     return;
   }
-  console.log(config)
   const { outputRoot } = config
   return {
     ...config,
