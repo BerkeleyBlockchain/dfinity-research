@@ -9,6 +9,10 @@ const defaultWebpackConfig = require('./webpack.config');
  * Generate a webpack configuration for a canister.
  */
 function generateWebpackDevConfig(config) {
+  if (config.entry.index.includes('linkedup')) { // don't run linkedup in dev mode
+    return;
+  }
+  console.log(config)
   const { outputRoot } = config
   return {
     ...config,
@@ -18,12 +22,13 @@ function generateWebpackDevConfig(config) {
       compress: true,
       port: 9000,
       proxy: {
-        '/': 'http://localhost:8000/'
+        '/proxy': { target: 'http://localhost:8000/', pathRewrite: {'^/proxy': '' }},
+        '/': 'http://localhost:8000/',
       }
     },
     devtool: 'source-map',
     plugins: [
-      // new BundleAnalyzerPlugin(),
+      new BundleAnalyzerPlugin(),
       new HTMLWebpackPlugin({ template: './index.html' }),
       new ProvidePlugin({
         ic: [path.resolve(path.join(__dirname, 'ic-polyfill.js')), 'ic'],

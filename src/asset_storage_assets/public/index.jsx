@@ -91,26 +91,26 @@ class Upload extends React.Component {
                 </div>
                 <div className="uploadArea">
                     <div>
-                        <div class="col-md-6">
-                            <div class="field">
-                                <div class="control">
-                                    <label class="label">Video Info</label>
-                                    <input class="input" type="text" placeholder="Video Title" id="videoInfo" onChange={ev => this.onVideoNameChange(ev)} />
+                        <div className="col-md-6">
+                            <div className="field">
+                                <div className="control">
+                                    <label className="label">Video Info</label>
+                                    <input className="input" type="text" placeholder="Video Title" id="videoInfo" onChange={ev => this.onVideoNameChange(ev)} />
                                 </div>
                             </div>
-                            <label class="label">Upload Your File </label>
-                            <div id="file-js-example" class="file has-name">
-                                <label class="file-label">
-                                    <input class="file-input" type="file" name="resume" onChange={ev => this.onChangeHandler(ev)} />
-                                    <span class="file-cta">
-                                        <span class="file-icon">
-                                            <i class="fas fa-upload"></i>
+                            <label className="label">Upload Your File </label>
+                            <div id="file-js-example" className="file has-name">
+                                <label className="file-label">
+                                    <input className="file-input" type="file" name="resume" onChange={ev => this.onChangeHandler(ev)} />
+                                    <span className="file-cta">
+                                        <span className="file-icon">
+                                            <i className="fas fa-upload"></i>
                                         </span>
-                                        <span class="file-label">
+                                        <span className="file-label">
                                             Choose a file…
                                         </span>
                                     </span>
-                                    <span class="file-name">
+                                    <span className="file-name">
                                         {this.state.fileName === "" ? " No File Uploaded" : this.state.fileName}
                                     </span>
                                 </label>
@@ -127,7 +127,7 @@ class Upload extends React.Component {
 
                         <div>
                             <Link to="/">
-                                <button class="button" onClick={() => this.storeVideo()}>Upload video!</button>
+                                <button className="button" onClick={() => this.storeVideo()}>Upload video!</button>
                             </Link>
                         </div>
                     </div>
@@ -141,17 +141,17 @@ class Card extends React.Component {
     render() {
         return (
             <Link to={`/image/${this.props.video.video_id}`}>
-                <div class="card">
-                    <div class="card-image">
-                        <figure class="image is-4by3">
+                <div className="card">
+                    <div className="card-image">
+                        <figure className="image is-4by3">
                             <img src={this.props.video.file} />
                         </figure>
                     </div>
-                    <div class="content">
-                        <p class="title is-4">{this.props.video.title}</p>
-                        {(this.props.from !== NULL)
-                            ? <p class="subtitle is-8">Recommended from {this.props.from} Videos</p>
-                            : <p class="subtitle is-8">Recommended from public</p>}
+                    <div className="content">
+                        <p className="title is-4">{this.props.video.title}</p>
+                        {(this.props.from != null)
+                            ? <p className="subtitle is-8">Recommended from {this.props.from} Videos</p>
+                            : <p className="subtitle is-8">Recommended from public</p>}
                     </div>
                 </div>
             </Link >
@@ -199,8 +199,8 @@ class Home extends React.Component {
         ));
         return (
             <div className="app">
-                <section class="section">
-                    <h1 class="title">Greetings, from BABMEO :O !! Loading videos</h1>
+                <section className="section">
+                    <h1 className="title">Greetings, from BABMEO! Loading videos</h1>
                     {/* this.state.tags.map((t, index) => { */}
                     {/* return (<CheckBox key={index} handleCheckChieldElement={this.handleCheckChieldElement}  {...t} />) */}
                     {/* }) */}
@@ -243,9 +243,9 @@ class Search extends React.Component {
     render() {
         return (
             <section className="section">
-                <h1 class="title">Search results</h1>
+                <h1 className="title">Search results</h1>
                 {this.state.searching ? (
-                    <progress class="progress is-small is-primary" max="100">Loading...</progress>
+                    <progress className="progress is-small is-primary" max="100">Loading...</progress>
                 ) : (
                         this.state.searchResults == null ? "" : (
                             (this.state.searchResults.length ? <div>
@@ -305,26 +305,26 @@ function Navbar() {
         history.push('/search/' + term);
     }
     return (
-        <nav class="navbar is-warning" role="navigation" aria-label="main navigation">
-            <div class="navbar-brand">
+        <nav className="navbar is-warning" role="navigation" aria-label="main navigation">
+            <div className="navbar-brand">
                 <Link className="navbar-item has-text-weight-semibold is-size-5" to="/">
                     BABMEO
                 </Link>
             </div>
 
-            <div class="navbar-start">
+            <div className="navbar-start">
                 <Link className="navbar-item" to="/">Home</Link>
                 <Link className="navbar-item" to="/upload">Upload Image</Link>
             </div>
 
-            <form class="navbar-end" onSubmit={search}>
-                <div class="field has-addons is-align-self-center mr-2">
-                    <div class="control">
-                        <input class="input" type="text" value={term} placeholder="Search by title"
+            <form className="navbar-end" onSubmit={search}>
+                <div className="field has-addons is-align-self-center mr-2">
+                    <div className="control">
+                        <input className="input" type="text" value={term} placeholder="Search by title"
                             onChange={e => updateTerm(e.target.value)} />
                     </div>
-                    <div class="control">
-                        <button type="submit" class="button is-light">
+                    <div className="control">
+                        <button type="submit" className="button is-light">
                             Search
                             </button>
                     </div>
