@@ -2,9 +2,10 @@ type Video = record {
     "file": text;
     "title": text;
     "creator": principal;
-    "likes": nat64;
+    "likes": vec principal;
     "views": nat64;
     "video_id": text;
+    "tags": vec text;
 };
 
 type Profile_2 = record {
@@ -21,7 +22,7 @@ type Profile = Profile_2;
 
 service : {
     "retrieve": (text) -> (Video) query;
-    "store": (text, text)  -> (text);
+    "store": (text, text, vec text)  -> (text);
 
     "add_user": (principal) -> ();
 
@@ -29,6 +30,8 @@ service : {
 
     "all": () -> (vec Video);
     "connections_vids": () -> (vec Video);
+    "likeVideo": (text) -> ();
+    "subscribe": (principal) -> ();
 
     "get_profile": () -> (Profile);
     "get_connections": () -> (vec principal);

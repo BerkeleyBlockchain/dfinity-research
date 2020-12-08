@@ -1,2 +1,4 @@
 @charset "utf-8";
-@import "~bulma/bulma";
+@import "~bulma/sass/utilities/initial-variables.sass";
+$navbar-breakpoint: 680px; // Collapse the navbar only when absolutely necessary
+@import "~bulma/bulma.sass";

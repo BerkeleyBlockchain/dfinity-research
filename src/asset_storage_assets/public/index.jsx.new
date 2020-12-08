@@ -1,10 +1,8 @@
 import asset_storage from 'ic:canisters/asset_storage';
-import React, { useState } from 'react';
-import { render } from 'react-dom';
-import ReactDOM from 'react-dom';
-import { Link, HashRouter, Route, Switch, useHistory } from 'react-router-dom';
+import { render } from 'preact';
+import { PureComponent } from 'preact/comapt';
 import "./style.scss";
-import { uploadChunks } from './chunk';
+import { copyWithin } from 'webpack.config.dev';
 
 const OPTIONS = ["All Videos", "Friend's Videos"]
 const CheckBox = props => {
@@ -15,32 +13,23 @@ const CheckBox = props => {
     )
 }
 
-function randomDelay(id, data) {
-    return new Promise((resolve, reject) => {
-        setTimeout(() => resolve(id), Math.random() * 5000 + 3000);
-    });
-}
-
 class Upload extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
+            videoID: 'Video ID',
             message: '',
             videoName: '',
-            video: '',
+            video: [],
             fileName: '',
             tags: [
                 { id: 1, value: "funny", isChecked: false },
                 { id: 2, value: "gaming", isChecked: false },
                 { id: 3, value: "dark", isChecked: false },
                 { id: 4, value: "animals", isChecked: false }
-            ],
-            uploadProgress: "",
-        };
-    }
+            ]
 
-    componentDidMount() {
-        console.log("mounting")
+        };
     }
 
     // Should call asset_storage.store, provide video title and file (string)
@@ -50,19 +39,14 @@ class Upload extends React.Component {
         let tags = this.state.tags
         var i;
         for (i = 0; i < tags.length; i++) {
-            if (tags[i].isChecked) {
-                ls.push(tags[i].value)
+            if (tags[i][isChecked]) {
+                ls.push(tags[i]['value'])
             }
         }
         console.log("tags", ls)
-        console.log(this.state.videoName);
+        console.log(this.state.videoName)
         // console.log(this.state.video)
-        const { chunks, uploaders } = await uploadChunks(this.state.video, randomDelay)
-        this.setState({ uploadProgress: `Uploading ${JSON.stringify(chunks)}...\n` });
-        await Promise.all(uploaders.map(u => u.then(
-            (id) => this.setState({ uploadProgress: this.state.uploadProgress + id + ' finished uploading\n' })
-        )));
-        const ret = await asset_storage.store(this.state.videoName, this.state.video, ls);
+        const ret = await asset_storage.store(this.state.videoName, this.state.video);
         console.log(ret)
         this.props.history.push('/image/' + ret);
     }
@@ -102,42 +86,49 @@ class Upload extends React.Component {
                 <div>
                     <h1>Please upload your image below</h1>
                 </div>
-                <div className="col-md-6">
-                    <div className="field">
-                        <div className="control">
-                            <label className="label">Video Info</label>
-                            <input className="input" type="text" placeholder="Video Title" id="videoInfo" onChange={ev => this.onVideoNameChange(ev)} />
+                <div className="uploadArea">
+                    <div>
+                        <div className="col-md-6">
+                            <div className="field">
+                                <div className="control">
+                                    <label className="label">Video Info</label>
+                                    <input className="input" type="text" placeholder="Video Title" id="videoInfo" onChange={ev => this.onVideoNameChange(ev)} />
+                                </div>
+                            </div>
+                            <label className="label">Upload Your File </label>
+                            <div id="file-js-example" className="file has-name">
+                                <label className="file-label">
+                                    <input className="file-input" type="file" name="resume" onChange={ev => this.onChangeHandler(ev)} />
+                                    <span className="file-cta">
+                                        <span className="file-icon">
+                                            <i className="fas fa-upload"></i>
+                                        </span>
+                                        <span className="file-label">
+                                            Choose a file…
+                                        </span>
+                                    </span>
+                                    <span className="file-name">
+                                        {this.state.fileName === "" ? " No File Uploaded" : this.state.fileName}
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <ul>
+                            {
+                                this.state.tags.map((t, index) => {
+                                    return (<CheckBox key={index} handleCheckChieldElement={this.handleCheckChieldElement}  {...t} />)
+                                })
+                            }
+                        </ul>
+
+                        <div>
+                            <Link to="/">
+                                <button className="button" onClick={() => this.storeVideo()}>Upload video!</button>
+                            </Link>
                         </div>
                     </div>
-                    <label className="label">Upload Your File </label>
-                    <div id="file-js-example" className="file has-name">
-                        <label className="file-label">
-                            <input className="file-input" type="file" name="resume" onChange={ev => this.onChangeHandler(ev)} />
-                            <span className="file-cta">
-                                <span className="file-icon">
-                                    <i className="fas fa-upload"></i>
-                                </span>
-                                <span className="file-label">
-                                    Choose a file…
-                                </span>
-                            </span>
-                            <span className="file-name">
-                                {this.state.fileName === "" ? " No File Uploaded" : this.state.fileName}
-                            </span>
-                        </label>
-                    </div>
-                    <pre>{this.state.uploadProgress}</pre>
                 </div>
-
-                <ul>
-                    {
-                        this.state.tags.map((t, index) => {
-                            return (<CheckBox key={index} handleCheckChieldElement={this.handleCheckChieldElement}  {...t} />)
-                        })
-                    }
-                </ul>
-
-                <button className="button" onClick={() => this.storeVideo()}>Upload video!</button>
             </section>
         );
     }
@@ -192,9 +183,13 @@ class Home extends React.Component {
         asset_storage.connections_vids().then(videos => this.setState({ ...this.state, connections: videos }));
     }
 
+    onNameChange(ev) {
+        this.setState({ ...this.state, videoID: ev.target.value });
+    }
+
     render() {
         const all = this.state.all.map(video => (
-            <div key={video.title} className="column is-2"><Card video={video} /></div>
+            <div key={video.title} className="column is-2"><Card video={video} from={"Random"} /></div>
         ));
         const connections = this.state.connections.map(video => (
             <div key={video.title} className="column is-2"><Card video={video} from={"Connections"} /></div>
@@ -202,27 +197,19 @@ class Home extends React.Component {
         return (
             <div className="app">
                 <section className="section">
-                    <h1 className="title">Greetings, from BABMEO! Loading videos</h1>
-                    {this.state.tags.map((t, index) => {
-                        return (<CheckBox key={index} handleCheckChieldElement={this.handleCheckChieldElement}  {...t} />)
-                    })}
+                    <h1 className="title">Greetings, from BABMEO!! Loading videos</h1>
+                    {/* this.state.tags.map((t, index) => { */}
+                    {/* return (<CheckBox key={index} handleCheckChieldElement={this.handleCheckChieldElement}  {...t} />) */}
+                    {/* }) */}
 
-                    {this.state.tags[0].isChecked && (
-                        <div>
-                            <h2 className="subtitle">All videos</h2>
-                            <div className="columns">
-                                {all}
-                            </div>
-                        </div>
-                    )}
-                    {this.state.tags[1].isChecked && (
-                        <div>
-                            <h2 className="subtitle">Videos from your LinkedUp connections</h2>
-                            <div className="columns">
-                                {connections}
-                            </div>
-                        </div>
-                    )}
+                    <h2 className="subtitle">All videos</h2>
+                    <div className="columns">
+                        {all}
+                    </div>
+                    <h2 className="subtitle">Videos from your LinkedUp connections</h2>
+                    <div className="columns">
+                        {connections}
+                    </div>
                 </section>
             </div>
         );
@@ -281,37 +268,14 @@ class Video extends React.Component {
 
     async componentDidMount() {
         const video = await asset_storage.retrieve(this.props.match.params.id);
-        console.log(video.tags)
-        let str = ""
-        let i = 0
-        for (i = 0; i < video.tags.length; i++) {
-            if (str.length != 0) {
-                str = str + ", " + video.tags[i]
-            } else {
-                str = video.tags[i]
-            }
-        }
         this.setState({
             ...this.state,
             views: Number(video.views),
-            likes: video.likes.length,
+            likes: Number(video.likes),
             videoName: video.title,
-            video: video.file,
-            tags: str,
-            videoId: video.video_id,
-            videoCreator: video.creator
+            video: video.file
         });
         console.log(this.state);
-    }
-
-    async likeVideo(event) {
-        await asset_storage.likeVideo(this.state.videoId);
-        // window.location.reload(false);
-    }
-
-    async subVideo(event) {
-        await asset_storage.subscribe(this.state.videoCreator);
-        // window.location.reload(false);
     }
 
     render() {
@@ -322,11 +286,8 @@ class Video extends React.Component {
                 </div>
                 <div><img src={this.state.video} /></div>
                 <div>
-                    <button class="button is-link is-outlined" onClick={() => this.likeVideo()}>👍</button>
-                    <button class="button is-link is-outlined" onClick={() => this.subVideo()}>subscribe</button>
-                    <p><b>Likes</b> {this.state.likes}</p>
-                    <p><b>Views</b> {this.state.views}</p>
-                    <p><b>Tags</b> {this.state.tags}</p>
+                    <p>Likes {this.state.likes}</p>
+                    <p>Views {this.state.views}</p>
                 </div>
             </div>
         );

@@ -38,7 +38,8 @@ struct Video {
     title: String,
     creator: Principal,
     views: u64,
-    likes: u64
+    likes: Vec<Principal>,
+    tags: Vec<String>,
 }
 
 #[derive(Clone, Default, Debug, CandidType, Serialize)]
@@ -53,7 +54,7 @@ type Store = BTreeMap<String, Video>;
 #[update]
 async fn get_profile() -> Box<Profile2> {
     // This is the canister id of the canister running LinkedUp
-    let linkedupid = ic_cdk::export::Principal::from_text("do2cr-xieaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q").unwrap();
+    let linkedupid = ic_cdk::export::Principal::from_text("7kncf-oidaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q").unwrap();
     // There is only one for LinkedUp's `get` function: the id of the user.
     let args = (ic_cdk::api::caller(),);
     // Call the `get` function from LinkedUp, expecting the return type to be a Profile (but wrapped in a tuple).
@@ -64,7 +65,7 @@ async fn get_profile() -> Box<Profile2> {
 // Calls the LinkedUp getConnections method, which returns an array of connected profiles for the given user id.
 #[update]
 async fn get_connections() -> Vec<Principal> {
-    let linkedupid = ic_cdk::export::Principal::from_text("do2cr-xieaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q").unwrap();
+    let linkedupid = ic_cdk::export::Principal::from_text("7kncf-oidaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q").unwrap();
     let args = (ic_cdk::api::caller(),);
     let connections: (Vec<Profile2>,) = ic_cdk::call(linkedupid, "getConnections", args).await.unwrap();
     connections.0.iter().map(|c| c.id.clone()).collect()
@@ -100,7 +101,7 @@ fn is_user() -> Result<(), String> {
 
 // Adds a video to our database.
 #[update] // (guard = "is_user")]
-fn store(title: String, contents: String) -> String {
+fn store(title: String, contents: String, t: Vec<String>) -> String {
     // contents is in format "data:image/jpeg;base64,/9j/2wBDAAICAgICAgMCAgMFAwMDBQ..."
     if (contents[5..10].eq("image") || contents[5..10].eq("video")) {
         let store = storage::get_mut::<Store>();
@@ -111,8 +112,9 @@ fn store(title: String, contents: String) -> String {
             file: contents,
             title: title,
             creator: ic_cdk::api::caller(),
-            likes: 0,
+            likes: Vec::new(),
             views: 0,
+            tags: t,
         });
         id
     } else {
@@ -140,6 +142,22 @@ fn retrieve(path: String) -> &'static Video {
     match store.get(&path) {
         Some(content) => content,
         None => panic!("Path {} not found.", path),
+    }
+}
+
+#[update]
+fn likeVideo(path: String) {
+    let store = storage::get_mut::<Store>();
+    let sub = ic_cdk::api::caller();
+    if let video = store.get_mut(&path) {
+        match video {
+            Some(v) => if !v.likes.contains(&sub) {
+                v.likes.push(sub)
+            },
+            None    => panic!("video {} not found.", path),
+        }
+    } else {
+        panic!("video {} not found.", path);
     }
 }
 
