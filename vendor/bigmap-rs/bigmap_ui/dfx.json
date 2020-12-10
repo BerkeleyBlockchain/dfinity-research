@@ -1,0 +1,45 @@
+{
+  "canisters": {
+    "bigmap_ui": {
+      "frontend": {
+        "entrypoint": "src/public/App.tsx"
+      },
+      "source": [
+        "src/assets",
+        "dist/bigmap_ui/"
+      ],
+      "type": "assets"
+    },
+    "bigmap": {
+      "type": "custom",
+      "candid": "../src/bigmap_index.did",
+      "wasm": "../target/wasm32-unknown-unknown/release/bigmap_index.wasm",
+      "build": ""
+    },
+    "bigmap_data": {
+      "type": "custom",
+      "candid": "../src/bigmap_data.did",
+      "wasm": "../target/wasm32-unknown-unknown/release/bigmap_data.wasm",
+      "build": ""
+    }
+  },
+  "defaults": {
+    "build": {
+      "packtool": ""
+    }
+  },
+  "dfx": "0.6.15",
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    },
+    "tungsten": {
+      "providers": [
+        "https://gw.dfinity.network"
+      ],
+      "type": "persistent"
+    }
+  },
+  "version": 1
+}

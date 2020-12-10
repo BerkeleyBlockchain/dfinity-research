@@ -1,0 +1,37 @@
+type ResultNat8 = variant {
+  Ok: nat8;
+  Err: text;
+};
+
+type KeyValue = record {
+  vec nat8;
+  vec nat8;
+};
+
+type KeyString = record {
+  vec nat8;
+  text;
+};
+
+service : {
+    "get": (key: vec nat8) -> (opt vec nat8) query;
+    "put": (key: vec nat8, value: vec nat8) -> (nat64);
+    "batch_put": (batch: vec KeyValue) -> (nat64);
+    "append": (key: vec nat8, value: vec nat8) -> (nat64);
+    "delete": (key: vec nat8) -> (nat64);
+    "list": (key_prefix: vec nat8) -> (vec vec nat8) query;
+    "lookup_data_bucket_for_get": (key: vec nat8) -> (opt text) query;
+    "lookup_data_bucket_for_put": (key: vec nat8) -> (opt text) query;
+    "set_data_bucket_canister_wasm_binary": (wasm_binary: vec nat8) -> ();
+    "set_search_canister_wasm_binary": (wasm_binary: vec nat8) -> ();
+    "get_random_key": () -> (text) query;
+    "set_used_bytes_threshold": (threshold: nat32) -> ();
+
+    "put_and_fts_index": (key: vec nat8, value: text) -> (nat64);
+    "remove_from_fts_index": (key: vec nat8, document: text) -> ();
+    "search": (query_string: text) -> (record {nat64; vec KeyValue}) query;
+    "batch_put_and_fts_index": (doc_vec: vec KeyString) -> (nat64);
+
+    "maintenance": () -> (text);
+    "status": () -> (text) query;
+}

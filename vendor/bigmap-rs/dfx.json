@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "canisters": {
+    "bigmap": {
+      "type": "custom",
+      "candid": "src/bigmap_index.did",
+      "wasm": "target/wasm32-unknown-unknown/release/bigmap_index.wasm",
+      "build": "./build"
+    },
+    "bigmap_data": {
+      "type": "custom",
+      "candid": "src/bigmap_data.did",
+      "wasm": "target/wasm32-unknown-unknown/release/bigmap_data.wasm",
+      "build": "./build"
+    },
+    "bigmap_search": {
+      "type": "custom",
+      "candid": "src/bigmap_search.did",
+      "wasm": "target/wasm32-unknown-unknown/release/bigmap_data.wasm",
+      "build": "./build"
+    },
+    "bigmap_ui": {
+      "type": "custom",
+      "candid": "src/bigmap_data.did",
+      "wasm": "target/wasm32-unknown-unknown/release/bigmap_data.wasm",
+      "build": ""
+    }
+  },
+  "networks": {
+    "tungsten": {
+      "providers": [
+        "https://gw.dfinity.network"
+      ],
+      "type": "persistent"
+    },
+    "local": {
+      "bind": "0.0.0.0:8000",
+      "type": "ephemeral"
+    }
+  },
+  "defaults": {
+    "build": {
+      "output": "canisters/"
+    },
+    "start": {
+      "address": "127.0.0.1",
+      "port": 8000,
+      "serve_root": "canisters/eeoo/assets"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+.dfx/
+canisters/
+
+# Ignore everything in target/
+target/*
+
+node_modules/
