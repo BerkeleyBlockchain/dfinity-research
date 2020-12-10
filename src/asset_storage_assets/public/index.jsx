@@ -281,7 +281,8 @@ class Video extends React.Component {
 
     async componentDidMount() {
         const video = await asset_storage.retrieve(this.props.match.params.id);
-        console.log(video.tags)
+        let usr = await asset_storage.get_profile(video.creator)
+        console.log(usr)
         let str = ""
         let i = 0
         for (i = 0; i < video.tags.length; i++) {
@@ -318,7 +319,7 @@ class Video extends React.Component {
         return (
             <div className="app">
                 <div>
-                    <h1>{this.state.videoName}</h1>
+                    <h1 class="title">{this.state.videoName}</h1>
                 </div>
                 <div><img src={this.state.video} /></div>
                 <div>
@@ -383,7 +384,7 @@ function App() {
             </Switch>
             <section>
                 <center>
-                    Visit <a href="/proxy/?canisterId=6ttj4-pafaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q">LinkedUp</a>.
+                    Visit <a href="/proxy/?canisterId=do2cr-xieaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q">LinkedUp</a>.
                 </center>
             </section>
         </main>
