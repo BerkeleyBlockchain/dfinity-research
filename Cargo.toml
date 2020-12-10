@@ -1,6 +1,8 @@
 [workspace]
 members = [
-    "src/asset_storage_rs",
+    "src/asset_storage_rs"
+]
+exclude = [
     "vendor/bigmap-rs"
 ]
 
