@@ -19,9 +19,9 @@ function generateWebpackDevConfig(config) {
     devServer: {
       contentBase: outputRoot,
       compress: true,
-      port: 9000,
+      port: 8900,
       proxy: {
-        '/proxy': { target: 'http://localhost:8000/', pathRewrite: {'^/proxy': '' }},
+        '/proxy': { target: 'http://localhost:8000/', pathRewrite: { '^/proxy': '' } },
         '/': 'http://localhost:8000/',
       }
     },

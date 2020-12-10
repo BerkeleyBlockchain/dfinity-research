@@ -11,7 +11,9 @@
       "main": "src/linkedup/main.mo"
     },
     "linkedup_assets": {
-      "dependencies": ["linkedup"],
+      "dependencies": [
+        "linkedup"
+      ],
       "frontend": {
         "entrypoint": "src/linkedup/public/main.js"
       },
@@ -32,7 +34,7 @@
     },
     "asset_storage_assets": {
       "dependencies": [
-	"asset_storage"
+        "asset_storage"
       ],
       "frontend": {
         "entrypoint": "src/asset_storage_assets/public/index.jsx"
@@ -42,6 +44,18 @@
         "dist/asset_storage_assets/"
       ],
       "type": "assets"
+    },
+    "bigmap": {
+      "type": "custom",
+      "candid": "vendor/bigmap-rs/src/bigmap_index.did",
+      "wasm": "vendor/bigmap-rs/target/wasm32-unknown-unknown/release/bigmap_index.wasm",
+      "build": "./vendor/bigmap-rs/build"
+    },
+    "bigmap_data": {
+      "type": "custom",
+      "candid": "vendor/bigmap-rs/src/bigmap_data.did",
+      "wasm": "vendor/bigmap-rs/target/wasm32-unknown-unknown/release/bigmap_data.wasm",
+      "build": "./vendor/bigmap-rs/build"
     }
   },
   "defaults": {
@@ -49,7 +63,7 @@
       "packtool": ""
     }
   },
-  "dfx": "0.6.12",
+  "dfx": "0.6.14",
   "networks": {
     "ic": {
       "providers": [

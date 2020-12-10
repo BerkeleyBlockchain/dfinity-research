@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "src/asset_storage_rs",
+    "vendor/bigmap-rs"
 ]
 
 [profile.release]

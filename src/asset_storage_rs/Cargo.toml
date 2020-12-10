@@ -11,8 +11,9 @@ path = "lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-ic-cdk = { path = "../../../../src/ic-cdk", version = "0.1.0" }
-ic-cdk-macros = { path = "../../../../src/ic-cdk-macros", version = "0.1.0" }
+ic-cdk = "0.1.1"
+ic-cdk-macros = "0.1.1"
+candid = "0.6.11"
 ic-types = "0.1.1"
 serde = "1.0.111"
 uuid = { version = "0.8", features = ["v3", "wasm-bindgen"] }

@@ -3,9 +3,8 @@
 use ic_cdk::storage;
 use ic_cdk_macros::*;
 use ic_types::Principal;
-use std::collections::{BTreeMap, BTreeSet};
-use ic_cdk::export::candid;
-use ic_cdk::export::candid::CandidType;
+use std::collections::BTreeMap;
+use candid::CandidType;
 use uuid::Uuid;
 use serde::{Deserialize,Serialize};
 use core::cmp::Ordering;
@@ -18,6 +17,7 @@ struct LinkedUp;
 // since the linkedup cansiter was imported, but due to a bug with our current version
 // of dfx, the imported Profile has the wrong type for `id` (it's not a Principal
 // type). So for now, we use this slightly modified version called Profile2.
+#[allow(non_snake_case)]
 #[derive(Clone, Debug, CandidType, Deserialize)]
 struct Profile2 {
     id: Principal,
@@ -54,7 +54,7 @@ type Store = BTreeMap<String, Video>;
 #[update]
 async fn get_profile() -> Box<Profile2> {
     // This is the canister id of the canister running LinkedUp
-    let linkedupid = ic_cdk::export::Principal::from_text("7kncf-oidaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q").unwrap();
+    let linkedupid = ic_cdk::export::Principal::from_text(env!("CANISTER_ID_linkedup")).unwrap();
     // There is only one for LinkedUp's `get` function: the id of the user.
     let args = (ic_cdk::api::caller(),);
     // Call the `get` function from LinkedUp, expecting the return type to be a Profile (but wrapped in a tuple).
@@ -65,7 +65,7 @@ async fn get_profile() -> Box<Profile2> {
 // Calls the LinkedUp getConnections method, which returns an array of connected profiles for the given user id.
 #[update]
 async fn get_connections() -> Vec<Principal> {
-    let linkedupid = ic_cdk::export::Principal::from_text("7kncf-oidaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q").unwrap();
+    let linkedupid = ic_cdk::export::Principal::from_text(env!("CANISTER_ID_linkedup")).unwrap();
     let args = (ic_cdk::api::caller(),);
     let connections: (Vec<Profile2>,) = ic_cdk::call(linkedupid, "getConnections", args).await.unwrap();
     connections.0.iter().map(|c| c.id.clone()).collect()
@@ -188,7 +188,7 @@ fn text_has(v: &Video, text: &str) -> bool {
     v.title.to_ascii_lowercase().contains(text)
 }
 
-fn text_match(a: &Video, b: &Video, text: &str) -> Ordering {
+fn text_match(a: &Video, b: &Video, _text: &str) -> Ordering {
     // Sort by levenshtein distance and then by alphanumeric title
     match a.title.len().cmp(&b.title.len()) {
         Ordering::Equal => a.title.cmp(&b.title),
