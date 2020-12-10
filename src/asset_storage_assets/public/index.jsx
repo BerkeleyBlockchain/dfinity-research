@@ -4,7 +4,9 @@ import { render } from 'react-dom';
 import ReactDOM from 'react-dom';
 import { Link, HashRouter, Route, Switch, useHistory } from 'react-router-dom';
 import "./style.scss";
-import { uploadChunks } from './chunk';
+import { thumbnail, uploadChunks } from './chunk';
+import BigSearch from 'ic:canisters/BigSearch';
+
 
 const OPTIONS = ["All Videos", "Friend's Videos"]
 const CheckBox = props => {
@@ -17,7 +19,7 @@ const CheckBox = props => {
 
 function randomDelay(id, data) {
     return new Promise((resolve, reject) => {
-        setTimeout(() => resolve(id), Math.random() * 5000 + 3000);
+        setTimeout(() => resolve(id), Math.random() * 2000 + 500);
     });
 }
 
@@ -56,13 +58,18 @@ class Upload extends React.Component {
         }
         console.log("tags", ls)
         console.log(this.state.videoName);
+        let thumb = "";
+        if (this.state.video.startsWith('data:video')) {
+            thumb = await thumbnail(this.state.video);
+        }
         // console.log(this.state.video)
         const { chunks, uploaders } = await uploadChunks(this.state.video, randomDelay)
         this.setState({ uploadProgress: `Uploading ${JSON.stringify(chunks)}...\n` });
         await Promise.all(uploaders.map(u => u.then(
             (id) => this.setState({ uploadProgress: this.state.uploadProgress + id + ' finished uploading\n' })
         )));
-        const ret = await asset_storage.store(this.state.videoName, this.state.video, ls);
+        console.log({ thumb })
+        const ret = await asset_storage.store(this.state.videoName, this.state.video, thumb, ls);
         console.log(ret)
         this.props.history.push('/image/' + ret);
     }
@@ -90,6 +97,7 @@ class Upload extends React.Component {
             reader.onload = (e) => {
                 // console.log(e.target.result);
                 this.setState({ video: e.target.result });
+                console.log(thumbnail(e.target.result))
             };
             reader.readAsDataURL(event.target.files[0]);
         }
@@ -150,10 +158,11 @@ class Card extends React.Component {
                 <div className="card">
                     <div className="card-image">
                         <figure className="image is-4by3">
-                            <img src={this.props.video.file} />
+                            <img src={this.props.video.thumbnail || this.props.video.file} />
                         </figure>
                     </div>
                     <div className="content">
+
                         <p className="title is-4">{this.props.video.title}</p>
                         {(this.props.from != null)
                             ? <p className="subtitle is-8">Recommended from {this.props.from} Videos</p>
@@ -267,13 +276,12 @@ class Search extends React.Component {
     }
 }
 
-
 class Video extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            videoName: '',
-            video: '',
+            name: '',
+            file: '',
             views: 0,
             likes: 0
         };
@@ -281,53 +289,35 @@ class Video extends React.Component {
 
     async componentDidMount() {
         const video = await asset_storage.retrieve(this.props.match.params.id);
-        let usr = await asset_storage.get_profile(video.creator)
-        console.log(usr)
-        let str = ""
-        let i = 0
-        for (i = 0; i < video.tags.length; i++) {
-            if (str.length != 0) {
-                str = str + ", " + video.tags[i]
-            } else {
-                str = video.tags[i]
-            }
-        }
-        this.setState({
-            ...this.state,
-            views: Number(video.views),
-            likes: video.likes.length,
-            videoName: video.title,
-            video: video.file,
-            tags: str,
-            videoId: video.video_id,
-            videoCreator: video.creator
-        });
-        console.log(this.state);
+        this.setState(video);
     }
 
     async likeVideo(event) {
-        await asset_storage.likeVideo(this.state.videoId);
+        await asset_storage.likeVideo(this.state.video_id);
         // window.location.reload(false);
     }
 
     async subVideo(event) {
-        await asset_storage.subscribe(this.state.videoCreator);
-        // window.location.reload(false);
+        await asset_storage.subscribe(this.state.creator);
+        // window.locaftion.reload(false);
     }
 
     render() {
         return (
             <div className="app">
                 <div>
-                    <h1 class="title">{this.state.videoName}</h1>
+                    <h1 class="title">{this.state.title}</h1>
                 </div>
-                <div><img src={this.state.video} /></div>
+                <div>{this.state.file.startsWith('data:video') ?
+                    <video controls src={this.state.file} /> :
+                    <img src={this.state.file} />}
+                </div>
                 <div>
                     <button class="button is-link is-outlined" onClick={() => this.likeVideo()}>👍</button>
                     <button class="button is-link is-outlined" onClick={() => this.subVideo()}>subscribe</button>
-                    <p><b>Likes</b> {this.state.likes}</p>
-                    <p><b>Views</b> {this.state.views}</p>
-                    <p><b>Tags</b> {this.state.tags}</p>
+                    <p><b>Likes</b> {this.state.likes.length}</p>
+                    <p><b>Views</b> {+this.state.views}</p>
+                    <p><b>Tags</b> {this.state.tags ? this.state.tags.join(',') : 'no tags'}</p>
                 </div>
             </div>
         );

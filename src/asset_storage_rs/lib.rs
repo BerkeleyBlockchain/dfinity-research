@@ -35,6 +35,7 @@ struct Profile2 {
 struct Video {
     video_id: String,
     file: String,
+    thumbnail: String,
     title: String,
     creator: Principal,
     views: u64,
@@ -45,8 +46,10 @@ struct Video {
 #[derive(Clone, Default, Debug, CandidType, Serialize)]
 struct User {
     subscriptions: Vec<Principal>,
+    tagValues: TagArray,
 }
 
+type TagArray = [i64; 4];
 type Users = BTreeMap<Principal, User>;
 type Store = BTreeMap<String, Video>;
 
@@ -101,15 +104,16 @@ fn is_user() -> Result<(), String> {
 
 // Adds a video to our database.
 #[update] // (guard = "is_user")]
-fn store(title: String, contents: String, t: Vec<String>) -> String {
+fn store(title: String, contents: String, thumbnail: String, t: Vec<String>) -> String {
     // contents is in format "data:image/jpeg;base64,/9j/2wBDAAICAgICAgMCAgMFAwMDBQ..."
-    if (contents[5..10].eq("image") || contents[5..10].eq("video")) {
+    if contents[5..10].eq("image") || contents[5..10].eq("video") {
         let store = storage::get_mut::<Store>();
         let id = Uuid::new_v3(&Uuid::NAMESPACE_URL, &contents.as_bytes())
                     .to_simple().to_string();
         store.insert(id.clone(), Video {
             video_id: id.clone(),
             file: contents,
+            thumbnail: thumbnail,
             title: title,
             creator: ic_cdk::api::caller(),
             likes: Vec::new(),
@@ -148,13 +152,50 @@ fn retrieve(path: String) -> &'static Video {
 #[update]
 fn likeVideo(path: String) {
     let store = storage::get_mut::<Store>();
+    let users = storage::get_mut::<Users>();
     let sub = ic_cdk::api::caller();
     if let video = store.get_mut(&path) {
         match video {
             Some(v) => if !v.likes.contains(&sub) {
-                v.likes.push(sub)
+                v.likes.push(sub);
+                let caller = ic_cdk::api::caller();
+                let mut funny = 0;
+                let mut gaming = 0;
+                let mut dark = 0; 
+                let mut animals = 0;
+
+                let f: String = "funny".to_string();
+                if v.tags.contains(&f) {
+                    funny = 1;
+                }
+                let g: String = "gaming".to_string();
+                if v.tags.contains(&g) {
+                    funny = 1;
+                }
+                let d: String = "dark".to_string();
+                if v.tags.contains(&d) {
+                    funny = 1;
+                }
+                let a: String = "animals".to_string();
+                if v.tags.contains(&a) {
+                    funny = 1;
+                }
+
+                let mut addVal: TagArray = [funny, gaming, dark, animals];
+                if let Some(user) = users.get_mut(&caller) {
+                    let mut newVal: TagArray = [0, 0, 0, 0];
+                    for i in 0..3 {
+                        newVal[i] = user.tagValues[i] + addVal[i];
+                    }
+                    user.tagValues = newVal;
+                    // user.tagValues = tagValue;
+                } else {
+                    let mut u = User::default();
+                    u.tagValues = addVal;
+                    users.insert(ic_cdk::api::caller(), u);
+                }
             },
-            None    => panic!("video {} not found.", path),
+            None => panic!("video {} not found.", path),
         }
     } else {
         panic!("video {} not found.", path);

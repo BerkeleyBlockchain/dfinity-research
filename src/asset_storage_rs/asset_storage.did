@@ -1,5 +1,6 @@
 type Video = record {
     "file": text;
+    "thumbnail": text;
     "title": text;
     "creator": principal;
     "likes": vec principal;
@@ -20,9 +21,10 @@ type Profile_2 = record {
 };
 type Profile = Profile_2;
 
+
 service : {
     "retrieve": (text) -> (Video) query;
-    "store": (text, text, vec text)  -> (text);
+    "store": (text, text, text, vec text)  -> (text);
 
     "add_user": (principal) -> ();
 
