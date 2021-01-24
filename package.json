@@ -10,6 +10,8 @@
     "devDependencies": {
         "@dfinity/agent": "0.6.12",
         "html-webpack-plugin": "^4.5.0",
+        "node-fetch": "^2.6.1",
+        "node-webcrypto-ossl": "^2.1.2",
         "sass-loader": "^10.1.0",
         "terser-webpack-plugin": "2.2.2",
         "webpack": "4.41.3",
@@ -20,6 +22,7 @@
     "dependencies": {
         "animate.css": "^3.7.2",
         "bootstrap": "^4.4.1",
+        "btoa": "^1.2.1",
         "bulma": "^0.9.1",
         "copy-webpack-plugin": "6.1.0",
         "css-loader": "^5.0.0",

@@ -1,4 +1,5 @@
 import asset_storage from 'ic:canisters/asset_storage';
+import bigMap from 'ic:canisters/bigmap';
 import React, { useState } from 'react';
 import { render } from 'react-dom';
 import ReactDOM from 'react-dom';
@@ -63,15 +64,43 @@ class Upload extends React.Component {
             thumb = await thumbnail(this.state.video);
         }
         // console.log(this.state.video)
-        const { chunks, uploaders } = await uploadChunks(this.state.video, randomDelay)
-        this.setState({ uploadProgress: `Uploading ${JSON.stringify(chunks)}...\n` });
-        await Promise.all(uploaders.map(u => u.then(
-            (id) => this.setState({ uploadProgress: this.state.uploadProgress + id + ' finished uploading\n' })
-        )));
+
+        // BIGMAP UPLOADING
+        const id = [];
+        let idstr = '';
+        for (let i = 0; i < 32; i++) {
+            let val = Math.floor(Math.random() * 10)
+            id.push(val);
+            idstr += val;
+        };
+
+        const dataByteArray = [];
+        const data = JSON.stringify({
+            name: this.state.videoName,
+            file: this.state.video,
+            thumbnail: thumb,
+            tags: ls
+        });
+        for (let i = 0; i < data.length; i++) {
+            dataByteArray.push(data.charCodeAt(i))
+        }
+
+        const ret = await bigMap.put(id, dataByteArray);
+
+        // Just chunking stuff we aren't using anymore
+        // const { chunks, uploaders } = await uploadChunks(this.state.video, randomDelay)
+        // this.setState({ uploadProgress: `Uploading ${JSON.stringify(chunks)}...\n` });
+        // await Promise.all(uploaders.map(u => u.then(
+        //     (id) => this.setState({ uploadProgress: this.state.uploadProgress + id + ' finished uploading\n' })
+        // )));
         console.log({ thumb })
-        const ret = await asset_storage.store(this.state.videoName, this.state.video, thumb, ls);
-        console.log(ret)
-        this.props.history.push('/image/' + ret);
+
+        // Upload with assset_storage canister
+        // const ret = await asset_storage.store(this.state.videoName, this.state.video, thumb, ls);
+        console.log(ret);
+        window.bigMap = bigMap;
+        console.log(id, idstr, dataByteArray);
+        this.props.history.push('/image/' + idstr);
     }
 
     onVideoNameChange(ev) {
@@ -288,8 +317,14 @@ class Video extends React.Component {
     }
 
     async componentDidMount() {
-        const video = await asset_storage.retrieve(this.props.match.params.id);
-        this.setState(video);
+        const idstr = this.props.match.params.id;
+        const id = [];
+        for (let i = 0; i < idstr.length; i++) {
+            id.push(Number(idstr.charAt(i)));
+        };
+        const video = await bigMap.get(id);;
+        console.log(id, video);
+        this.setState(JSON.parse(video));
     }
 
     async likeVideo(event) {
@@ -306,15 +341,15 @@ class Video extends React.Component {
         return (
             <div className="app">
                 <div>
-                    <h1 class="title">{this.state.title}</h1>
+                    <h1 className="title">{this.state.title}</h1>
                 </div>
                 <div>{this.state.file.startsWith('data:video') ?
                     <video controls src={this.state.file} /> :
                     <img src={this.state.file} />}
                 </div>
                 <div>
-                    <button class="button is-link is-outlined" onClick={() => this.likeVideo()}>👍</button>
-                    <button class="button is-link is-outlined" onClick={() => this.subVideo()}>subscribe</button>
+                    <button className="button is-link is-outlined" onClick={() => this.likeVideo()}>👍</button>
+                    <button className="button is-link is-outlined" onClick={() => this.subVideo()}>subscribe</button>
                     <p><b>Likes</b> {this.state.likes.length}</p>
                     <p><b>Views</b> {+this.state.views}</p>
                     <p><b>Tags</b> {this.state.tags ? this.state.tags.join(',') : 'no tags'}</p>
