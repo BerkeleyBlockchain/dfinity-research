@@ -322,9 +322,13 @@ class Video extends React.Component {
         for (let i = 0; i < idstr.length; i++) {
             id.push(Number(idstr.charAt(i)));
         };
-        const video = await bigMap.get(id);;
+        const video = await bigMap.get(id);
         console.log(id, video);
-        this.setState(JSON.parse(video));
+        let data = '';
+        for (let i = 0; i < video.length; i++) {
+            data += String.fromCharCode(video[i]);
+        }
+        this.setState(JSON.parse(data));
     }
 
     async likeVideo(event) {
