@@ -29,8 +29,8 @@
       ],
       "type": "custom",
       "candid": "src/asset_storage_rs/asset_storage.did",
-      "wasm": "target/wasm32-unknown-unknown/debug/asset_storage_rs.wasm",
-      "build": "cargo build --target wasm32-unknown-unknown --package asset_storage_rs"
+      "wasm": "target/wasm32-unknown-unknown/release/asset_storage_rs.wasm",
+      "build": "cargo build --target wasm32-unknown-unknown --package asset_storage_rs --release"
     },
     "asset_storage_assets": {
       "dependencies": [
@@ -77,11 +77,11 @@
       "packtool": ""
     },
     "start": {
-      "adddress": "127.0.0.1",
+      "address": "127.0.0.1",
       "port": 8000
     }
   },
-  "dfx": "0.6.20",
+  "dfx": "0.6.21",
   "networks": {
     "ic": {
       "providers": [
