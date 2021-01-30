@@ -325,8 +325,8 @@ class Video extends React.Component {
         const video = await bigMap.get(id);
         console.log(id, video);
         let data = '';
-        for (let i = 0; i < video.length; i++) {
-            data += String.fromCharCode(video[i]);
+        for (let i = 0; i < video[0].length; i++) {
+            data += String.fromCharCode(video[0][i]);
         }
         this.setState(JSON.parse(data));
     }
