@@ -1,0 +1,8 @@
+#!/bin/bash
+temp_file=$(mktemp)
+cat .dfx/local/canisters/bigmap/bigmap.did.js \
+     | sed 's/export default/module.exports =/g' \
+     | sed 's/export const/\/\/export const/g' \
+     > $temp_file
+mv $temp_file .dfx/local/canisters/bigmap/bigmap.did.js
+./vendor/bigmap-rs/bigmap-cli --set-data-bucket-wasm-binary ./vendor/bigmap-rs/target/wasm32-unknown-unknown/release/bigmap_data.wasm

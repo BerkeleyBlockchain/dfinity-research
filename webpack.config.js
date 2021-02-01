@@ -39,7 +39,7 @@ function generateWebpackConfigForCanister(name, info) {
     entry: {
       index: path.join(__dirname, info.frontend.entrypoint),
     },
-    devtool: "source-map",
+    devtool: "cheap-source-map",
     optimization: {
       minimize: true,
       minimizer: [new TerserPlugin()],

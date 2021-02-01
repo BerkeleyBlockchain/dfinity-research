@@ -33,10 +33,7 @@ struct Profile2 {
 // Datatype for storing videos.
 #[derive(Clone, Debug, CandidType, Serialize, Deserialize)]
 struct Video {
-    video_id: String,
-    file: String,
-    thumbnail: String,
-    title: String,
+    video_id: Vec<u8>,
     creator: Principal,
     views: u64,
     likes: Vec<Principal>,
@@ -51,7 +48,7 @@ struct User {
 
 type TagArray = [i64; 4];
 type Users = BTreeMap<Principal, User>;
-type Store = BTreeMap<String, Video>;
+type Store = BTreeMap<Vec<u8>, Video>;
 
 // Returns the user's profile from LinkedUp.
 #[update]
@@ -104,26 +101,16 @@ fn is_user() -> Result<(), String> {
 
 // Adds a video to our database.
 #[update] // (guard = "is_user")]
-fn store(title: String, contents: String, thumbnail: String, t: Vec<String>) -> String {
+fn store(id: Vec<u8>, t: Vec<String>) {
     // contents is in format "data:image/jpeg;base64,/9j/2wBDAAICAgICAgMCAgMFAwMDBQ..."
-    if contents[5..10].eq("image") || contents[5..10].eq("video") {
-        let store = storage::get_mut::<Store>();
-        let id = Uuid::new_v3(&Uuid::NAMESPACE_URL, &contents.as_bytes())
-                    .to_simple().to_string();
-        store.insert(id.clone(), Video {
-            video_id: id.clone(),
-            file: contents,
-            thumbnail: thumbnail,
-            title: title,
-            creator: ic_cdk::api::caller(),
-            likes: Vec::new(),
-            views: 0,
-            tags: t,
-        });
-        id
-    } else {
-        panic!("Wrong File Type!")
-    }
+    let store = storage::get_mut::<Store>();
+    store.insert(id.clone(), Video {
+        video_id: id.clone(),
+        creator: ic_cdk::api::caller(),
+        likes: Vec::new(),
+        views: 0,
+        tags: t,
+    });
 }
 
 // Subscribes to another user. This influences the recommended videos for the current user.
@@ -140,17 +127,17 @@ fn subscribe(sub: ic_types::Principal) {
 
 // Retrieve a video and its metadata.
 #[query]
-fn retrieve(path: String) -> &'static Video {
+fn retrieve(path: Vec<u8>) -> &'static Video {
     let store = storage::get::<Store>();
 
     match store.get(&path) {
         Some(content) => content,
-        None => panic!("Path {} not found.", path),
+        None => panic!("Path {:?} not found.", path),
     }
 }
 
 #[update]
-fn likeVideo(path: String) {
+fn likeVideo(path: Vec<u8>) {
     let store = storage::get_mut::<Store>();
     let users = storage::get_mut::<Users>();
     let sub = ic_cdk::api::caller();
@@ -195,17 +182,11 @@ fn likeVideo(path: String) {
                     users.insert(ic_cdk::api::caller(), u);
                 }
             },
-            None => panic!("video {} not found.", path),
+            None => panic!("video {:?} not found.", path),
         }
     } else {
-        panic!("video {} not found.", path);
+        panic!("video {:?} not found.", path);
     }
-}
-
-#[update(guard = "is_user")]
-fn add_user(principal: Principal) {
-    let users = storage::get_mut::<Users>();
-    users.insert(principal, User::default());
 }
 
 #[update]
@@ -215,9 +196,11 @@ async fn connections_vids() -> Vec<&'static Video> {
     let store = storage::get::<Store>();
 
     let videos = store.values();
+    ic_cdk::println!("Your connections: {:?}, videos: {:?}", connections, videos);
     videos.filter(|v| connections.contains(&v.creator)).collect()
 }
 
+/* Not needed because of bigmap
 #[query]
 fn all() -> Vec<&'static Video> {
     let store = storage::get::<Store>();
@@ -246,10 +229,11 @@ fn search(query: String) -> Vec<&'static Video> {
     videos.sort_by(|a, b| text_match(a, b, &lowerquery));
     videos
 }
+*/
 
 #[pre_upgrade]
 fn pre_upgrade() {
-    let vec: Vec<(String, Video)> = storage::get::<Store>().iter()
+    let vec: Vec<(Vec<u8>, Video)> = storage::get::<Store>().iter()
         .map(|(k,v)| (k.clone(), v.clone())).collect();
     storage::stable_save((vec,)).unwrap();
 }
@@ -262,7 +246,7 @@ fn post_upgrade() {
 }
 
 fn try_post_upgrade() -> Result<(), String> {
-    let (old_storage,): (Vec<(String, Video)>,) = storage::stable_restore()?;
+    let (old_storage,): (Vec<(Vec<u8>, Video)>,) = storage::stable_restore()?;
     for (id, vid) in old_storage {
         storage::get_mut::<Store>().insert(id, vid);
     }

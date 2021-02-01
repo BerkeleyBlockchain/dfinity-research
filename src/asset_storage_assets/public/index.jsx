@@ -76,7 +76,7 @@ class Upload extends React.Component {
 
         const dataByteArray = [];
         const data = JSON.stringify({
-            name: this.state.videoName,
+            title: this.state.videoName,
             file: this.state.video,
             thumbnail: thumb,
             tags: ls
@@ -96,7 +96,7 @@ class Upload extends React.Component {
         console.log({ thumb })
 
         // Upload with assset_storage canister
-        // const ret = await asset_storage.store(this.state.videoName, this.state.video, thumb, ls);
+        await asset_storage.store(id, ls);
         console.log(ret);
         window.bigMap = bigMap;
         console.log(id, idstr, dataByteArray);
@@ -225,9 +225,34 @@ class Home extends React.Component {
         this.setState({ tags: tags })
     }
 
-    componentDidMount() {
-        asset_storage.all().then(videos => this.setState({ ...this.state, all: videos }));
-        asset_storage.connections_vids().then(videos => this.setState({ ...this.state, connections: videos }));
+    async decode(videoIDs) {
+        var vids = []
+        console.log(videoIDs)
+        for(let i = 0; i < videoIDs.length; i++) {
+            let id = videoIDs[i]
+            let encVideo = await bigMap.get(id)
+            if (encVideo.length == 0) {
+                console.warn('Video id ' + id + ' is missing');
+                continue;
+            }
+            let dataStr = "";
+            for(let j = 0; j < encVideo[0].length; j++) {
+                dataStr += String.fromCharCode(encVideo[0][j]) 
+            }
+            vids.push(JSON.parse(dataStr))
+        }
+        return vids;
+    }
+
+    async componentDidMount() {
+        var videoIDs = await bigMap.list([])
+        var vids = await this.decode(videoIDs);
+        this.setState({ ...this.state, all: vids})
+        var connectionVids = await asset_storage.connections_vids();
+        console.log('connection ids', connectionVids.map(m => m.video_id));
+        var connectionDecoded = await this.decode(connectionVids.map(m => m.video_id))
+        console.log('decoded connection vids', connectionDecoded)
+        this.setState({ ...this.state, connections: connectionDecoded });
     }
 
     render() {
@@ -413,7 +438,7 @@ function App() {
             </Switch>
             <section>
                 <center>
-                    Visit <a href="/proxy/?canisterId=do2cr-xieaa-aaaaa-aaaaa-aaaaa-aaaaa-aaaaa-q">LinkedUp</a>.
+                    Visit <a href="/proxy/?canisterId=ryjl3-tyaaa-aaaaa-aaaba-cai">LinkedUp</a>.
                 </center>
             </section>
         </main>

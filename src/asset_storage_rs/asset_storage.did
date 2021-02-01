@@ -1,11 +1,8 @@
 type Video = record {
-    "file": text;
-    "thumbnail": text;
-    "title": text;
     "creator": principal;
     "likes": vec principal;
     "views": nat64;
-    "video_id": text;
+    "video_id": vec nat8;
     "tags": vec text;
 };
 
@@ -23,20 +20,15 @@ type Profile = Profile_2;
 
 
 service : {
-    "retrieve": (text) -> (Video) query;
-    "store": (text, text, text, vec text)  -> (text);
-
-    "add_user": (principal) -> ();
+    "retrieve": (vec nat8) -> (Video) query;
+    "store": (vec nat8, vec text)  -> ();
 
     "whoami": () -> (principal);
 
-    "all": () -> (vec Video);
     "connections_vids": () -> (vec Video);
     "likeVideo": (text) -> ();
     "subscribe": (principal) -> ();
 
     "get_profile": () -> (Profile);
     "get_connections": () -> (vec principal);
-
-    "search": (text) -> (vec Video);
 }
