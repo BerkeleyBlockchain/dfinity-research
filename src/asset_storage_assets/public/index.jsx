@@ -239,7 +239,9 @@ class Home extends React.Component {
             for(let j = 0; j < encVideo[0].length; j++) {
                 dataStr += String.fromCharCode(encVideo[0][j]) 
             }
-            vids.push(JSON.parse(dataStr))
+            let parsed = JSON.parse(dataStr);
+            parsed.video_id = id.join('');
+            vids.push(parsed);
         }
         return vids;
     }
@@ -438,7 +440,7 @@ function App() {
             </Switch>
             <section>
                 <center>
-                    Visit <a href="/proxy/?canisterId=ryjl3-tyaaa-aaaaa-aaaba-cai">LinkedUp</a>.
+                    Visit <a href="/?canisterId=ryjl3-tyaaa-aaaaa-aaaba-cai">LinkedUp</a>.
                 </center>
             </section>
         </main>
